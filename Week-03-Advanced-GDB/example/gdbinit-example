@@ -1,0 +1,44 @@
+# gdbinit-example — a minimal, sane .gdbinit
+#
+# Save as ~/.gdbinit to apply globally, or pass with
+#   gdb -x gdbinit-example ./prog
+# for per-project use.
+#
+# Keep this file small. A .gdbinit that does magic is a .gdbinit that
+# confuses future-you.
+
+# Persistent command history across sessions
+set history save on
+set history size 10000
+set history filename ~/.gdb_history
+
+# Better printing defaults
+set print pretty on
+set print array on
+set print array-indexes on
+set print object on
+
+# Don't interrupt long output
+set pagination off
+
+# Don't confirm every "are you sure" prompt
+set confirm off
+
+# Show the disassembly flavor you like (comment out if you prefer att)
+set disassembly-flavor intel
+
+# Load Python printers alongside the project when available
+# (uncomment and adjust path if you use this file globally)
+# python
+# import os, sys
+# p = os.path.expanduser('~/src/myproj')
+# if p not in sys.path: sys.path.insert(0, p)
+# end
+
+# Handy aliases
+define hook-run
+    echo (running)\n
+end
+
+# Ctrl-l redraws the TUI
+# (Ctrl-x a toggles TUI, Ctrl-x 2 cycles layouts)

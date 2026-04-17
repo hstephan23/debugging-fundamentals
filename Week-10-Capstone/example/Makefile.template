@@ -1,0 +1,78 @@
+# Makefile.template — a "debuggable by default" starter Makefile.
+#
+# Copy to your capstone project and adapt.
+#
+# Four build modes:
+#   make debug     -> ./prog_debug    (no opt, full warnings, asserts)
+#   make release   -> ./prog          (optimized, stripped binary + .debug)
+#   make asan      -> ./prog_asan     (AddressSanitizer + UBSan + LSan)
+#   make tsan      -> ./prog_tsan     (ThreadSanitizer)
+#   make valgrind  -> runs test suite under Memcheck
+#   make perf      -> runs test suite under `perf record`
+#
+# Run the full check suite (what CI would do) with:
+#   make check
+#
+# Don't like a flag? Disable it deliberately and leave a comment. Don't
+# just drop warnings silently.
+
+CC     ?= gcc
+SRC    ?= main.c                     # list your sources
+OBJS   ?= $(SRC:.c=.o)
+TARGET ?= prog
+
+WARN   = -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 \
+         -Wstrict-prototypes -Wmissing-prototypes -Wvla -Wdouble-promotion
+
+COMMON = -std=c11 $(WARN) -fno-omit-frame-pointer
+
+DEBUG_FLAGS   = -O0 -g3 -fno-common
+RELEASE_FLAGS = -O2 -g -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong
+ASAN_FLAGS    = -O1 -g3 -fsanitize=address,undefined -fno-sanitize-recover=all
+TSAN_FLAGS    = -O1 -g3 -fsanitize=thread
+
+VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all \
+                 --track-origins=yes --error-exitcode=1
+
+.PHONY: all debug release asan tsan valgrind perf check clean
+
+all: debug
+
+debug: $(TARGET)_debug
+
+$(TARGET)_debug: $(SRC)
+	$(CC) $(COMMON) $(DEBUG_FLAGS) -o $@ $^
+
+release: $(TARGET)
+
+$(TARGET): $(SRC)
+	$(CC) $(COMMON) $(RELEASE_FLAGS) -o $@ $^
+	objcopy --only-keep-debug $@ $@.debug
+	strip --strip-debug $@
+	objcopy --add-gnu-debuglink=$@.debug $@
+
+asan: $(TARGET)_asan
+
+$(TARGET)_asan: $(SRC)
+	$(CC) $(COMMON) $(ASAN_FLAGS) -o $@ $^ -fsanitize=address,undefined
+
+tsan: $(TARGET)_tsan
+
+$(TARGET)_tsan: $(SRC)
+	$(CC) $(COMMON) $(TSAN_FLAGS) -o $@ $^ -fsanitize=thread
+
+valgrind: $(TARGET)_debug
+	valgrind $(VALGRIND_FLAGS) ./$(TARGET)_debug
+
+perf: $(TARGET)
+	perf record -g -- ./$(TARGET)
+	perf report
+
+# What CI should run on every PR.
+check: $(TARGET)_debug $(TARGET)_asan $(TARGET)_tsan
+	./$(TARGET)_debug
+	./$(TARGET)_asan
+	./$(TARGET)_tsan
+
+clean:
+	rm -f $(TARGET) $(TARGET)_* $(OBJS) *.debug core core.*

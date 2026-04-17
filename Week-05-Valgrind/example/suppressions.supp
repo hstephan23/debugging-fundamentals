@@ -1,0 +1,29 @@
+# suppressions.supp — an illustrative Valgrind suppression file.
+#
+# Use with:  valgrind --suppressions=suppressions.supp ./myprog
+# Generate new ones with:  valgrind --gen-suppressions=yes ./myprog
+#
+# Rule of thumb: every suppression needs a comment explaining WHY it exists.
+# A suppression without a reason is just a silenced bug waiting to bite you.
+
+# Example: silence a known (and investigated) still-reachable leak inside
+# some third-party library we don't control. Remove when we upgrade past
+# version 1.2.3, which fixes it upstream.
+{
+   known_thirdparty_reachable_leak
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:third_party_init
+   ...
+}
+
+# Example: a libdl initialization leak on some distros. Cosmetic.
+{
+   glibc_dl_init_reachable
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:_dl_init
+}

@@ -1,0 +1,74 @@
+# Build artifacts
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+
+# Binaries from the exercises — none have extensions, so list them here
+# (or use `git add -f <name>` if you ever want to track one on purpose)
+Week-01-Foundations/example/sum_debug
+Week-01-Foundations/example/sum_release
+Week-02-GDB-Fundamentals/example/fib
+Week-02-GDB-Fundamentals/example/sleeper
+Week-03-Advanced-GDB/example/watchpoint_demo
+Week-03-Advanced-GDB/example/linked_list
+Week-04-Core-Dumps/example/crash
+Week-04-Core-Dumps/example/crash.debug
+Week-04-Core-Dumps/example/crash_handler
+Week-05-Valgrind/example/01_heap_overflow
+Week-05-Valgrind/example/02_use_after_free
+Week-05-Valgrind/example/03_double_free
+Week-05-Valgrind/example/04_uninitialized
+Week-05-Valgrind/example/05_missing_nul
+Week-05-Valgrind/example/06_off_by_one_write
+Week-05-Valgrind/example/07_leak
+Week-05-Valgrind/example/08_stack_use_after_return
+Week-06-Sanitizers/example/asan_demo
+Week-06-Sanitizers/example/ubsan_demo
+Week-07-Concurrency-1/example/race_counter
+Week-07-Concurrency-1/example/race_counter_mutex
+Week-07-Concurrency-1/example/race_counter_atomic
+Week-07-Concurrency-1/example/false_sharing
+Week-07-Concurrency-1/example/tsan_race
+Week-08-Concurrency-2/example/deadlock
+Week-08-Concurrency-2/example/deadlock_fixed
+Week-08-Concurrency-2/example/errorcheck_mutex
+Week-08-Concurrency-2/example/cond_spurious
+Week-09-Logging/example/server
+Week-09-Logging/example/cpu_hog
+
+# Core dumps
+core
+core.*
+vgcore.*
+
+# Debug info artifacts
+*.debug
+*.dSYM/
+
+# rr traces (can get huge)
+.rr/
+rr-trace-*/
+
+# perf
+perf.data
+perf.data.old
+
+# Sanitizer output
+*.asan.log
+*.tsan.log
+*.ubsan.log
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CLion: keep the project config but ignore volatile per-user state
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
