@@ -67,8 +67,4 @@ perf.data.old
 *~
 .DS_Store
 
-# CLion: keep the project config but ignore volatile per-user state
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/usage.statistics.xml
-.idea/shelf/
+.idea

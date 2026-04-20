@@ -1,0 +1,115 @@
+# CMakeLists.txt.template — a "debuggable by default" starter.
+#
+# Copy to your capstone project, rename to CMakeLists.txt, and adapt.
+#
+# Four executable targets built from the same sources:
+#   prog_debug   -> no opt, full warnings, asserts on
+#   prog         -> optimized; produces a separate .debug file
+#   prog_asan    -> AddressSanitizer + UBSan
+#   prog_tsan    -> ThreadSanitizer
+#
+# Plus convenience targets:
+#   valgrind  — run the debug binary under memcheck
+#   perf      — record + report a perf profile of the release binary
+#   check     — run debug, asan, tsan sequentially (what CI should do)
+#
+# Don't like a flag? Disable it deliberately and leave a comment. Don't
+# just drop warnings silently.
+#
+# From the command line:
+#   cmake -S . -B build
+#   cmake --build build --target check
+#
+# In CLion: every target shows up in the run configuration dropdown.
+
+cmake_minimum_required(VERSION 3.15)
+project(prog C)       # rename to your project
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# ---------------------------------------------------------------------------
+# Sources and name. Change these three lines for your project.
+# ---------------------------------------------------------------------------
+set(PROG_NAME prog)
+set(SOURCES   main.c)   # list all .c files here
+
+# ---------------------------------------------------------------------------
+# Flag sets
+# ---------------------------------------------------------------------------
+set(WARN_FLAGS
+    -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2
+    -Wstrict-prototypes -Wmissing-prototypes -Wvla -Wdouble-promotion)
+
+set(COMMON_FLAGS ${WARN_FLAGS} -fno-omit-frame-pointer)
+
+set(DEBUG_FLAGS   -O0 -g3 -fno-common)
+set(RELEASE_FLAGS -O2 -g -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong)
+set(ASAN_FLAGS    -O1 -g3 -fsanitize=address,undefined -fno-sanitize-recover=all)
+set(TSAN_FLAGS    -O1 -g3 -fsanitize=thread)
+
+# ---------------------------------------------------------------------------
+# Four executable variants
+# ---------------------------------------------------------------------------
+
+# Debug ---------------------------------------------------------------------
+add_executable(${PROG_NAME}_debug ${SOURCES})
+target_compile_options(${PROG_NAME}_debug PRIVATE ${COMMON_FLAGS} ${DEBUG_FLAGS})
+
+# Release (stripped binary + separate .debug file) --------------------------
+add_executable(${PROG_NAME} ${SOURCES})
+target_compile_options(${PROG_NAME} PRIVATE ${COMMON_FLAGS} ${RELEASE_FLAGS})
+
+# Post-build: objcopy the debuginfo out, strip, add a gnu-debuglink.
+# Non-fatal on macOS where objcopy isn't in a default install.
+find_program(OBJCOPY_EXE objcopy)
+find_program(STRIP_EXE   strip)
+if(OBJCOPY_EXE AND STRIP_EXE)
+    add_custom_command(TARGET ${PROG_NAME} POST_BUILD
+        COMMAND ${OBJCOPY_EXE} --only-keep-debug
+                $<TARGET_FILE:${PROG_NAME}> $<TARGET_FILE:${PROG_NAME}>.debug
+        COMMAND ${STRIP_EXE} --strip-debug $<TARGET_FILE:${PROG_NAME}>
+        COMMAND ${OBJCOPY_EXE} --add-gnu-debuglink=$<TARGET_FILE:${PROG_NAME}>.debug
+                $<TARGET_FILE:${PROG_NAME}>
+        COMMENT "Splitting debuginfo into ${PROG_NAME}.debug")
+endif()
+
+# AddressSanitizer + UBSan --------------------------------------------------
+add_executable(${PROG_NAME}_asan ${SOURCES})
+target_compile_options(${PROG_NAME}_asan PRIVATE ${COMMON_FLAGS} ${ASAN_FLAGS})
+target_link_options   (${PROG_NAME}_asan PRIVATE -fsanitize=address,undefined)
+
+# ThreadSanitizer -----------------------------------------------------------
+add_executable(${PROG_NAME}_tsan ${SOURCES})
+target_compile_options(${PROG_NAME}_tsan PRIVATE ${COMMON_FLAGS} ${TSAN_FLAGS})
+target_link_options   (${PROG_NAME}_tsan PRIVATE -fsanitize=thread)
+
+# ---------------------------------------------------------------------------
+# Convenience custom targets
+# ---------------------------------------------------------------------------
+set(VALGRIND_FLAGS
+    --leak-check=full --show-leak-kinds=all
+    --track-origins=yes --error-exitcode=1)
+
+add_custom_target(valgrind
+    COMMAND valgrind ${VALGRIND_FLAGS} $<TARGET_FILE:${PROG_NAME}_debug>
+    DEPENDS ${PROG_NAME}_debug
+    USES_TERMINAL
+    COMMENT "Running ${PROG_NAME}_debug under valgrind memcheck")
+
+add_custom_target(perf
+    COMMAND perf record -g -- $<TARGET_FILE:${PROG_NAME}>
+    COMMAND perf report
+    DEPENDS ${PROG_NAME}
+    USES_TERMINAL
+    COMMENT "perf record + report on ${PROG_NAME}")
+
+# What CI should run on every PR.
+add_custom_target(check
+    COMMAND $<TARGET_FILE:${PROG_NAME}_debug>
+    COMMAND $<TARGET_FILE:${PROG_NAME}_asan>
+    COMMAND $<TARGET_FILE:${PROG_NAME}_tsan>
+    DEPENDS ${PROG_NAME}_debug ${PROG_NAME}_asan ${PROG_NAME}_tsan
+    USES_TERMINAL
+    COMMENT "Running debug + asan + tsan")
