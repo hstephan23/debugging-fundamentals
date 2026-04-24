@@ -3,7 +3,7 @@
 # Two small demos compiled under different sanitizers so you can see what
 # each one catches.
 #
-#   asan_demo   -> AddressSanitizer + UBSanitizer
+#   asan_demo   -> AddressSanitizer; LeakSanitizer where supported
 #   ubsan_demo  -> UBSanitizer only
 #
 #   cmake --build .
@@ -19,13 +19,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(COMMON_FLAGS -O1 -g3 -Wall -Wextra -Wpedantic -fno-omit-frame-pointer)
 
-# --- asan_demo: ASan + UBSan ----------------------------------------------
+# --- asan_demo: ASan, plus LSan on platforms that support it --------------
 add_executable(asan_demo asan_demo.c)
 target_compile_options(asan_demo PRIVATE
     ${COMMON_FLAGS}
-    -fsanitize=address,undefined -fno-sanitize-recover=all)
+    -fsanitize=address -fno-sanitize-recover=all)
 target_link_options(asan_demo PRIVATE
-    -fsanitize=address,undefined)
+    -fsanitize=address)
 
 # --- ubsan_demo: UBSan only -----------------------------------------------
 add_executable(ubsan_demo ubsan_demo.c)

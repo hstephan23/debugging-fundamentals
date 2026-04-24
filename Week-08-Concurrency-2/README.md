@@ -4,6 +4,16 @@
 
 Handle the second big class of concurrency bugs — deadlocks, livelocks, and priority-inversion-style hangs — and learn to inspect a live multi-threaded program in GDB. A hung process is a very different investigation from a crash, and it wants a different toolkit.
 
+## 30-minute pass
+
+- **0–5 min:** Read the concepts on deadlock conditions and lock ordering.
+- **5–12 min:** `cd example && make`, then run `./deadlock &` and let it hang in the background.
+- **12–22 min:** Attach with `gdb -p <pid>` and run `thread apply all bt`. Find the threads blocked on locks, then `detach`.
+- **22–26 min:** Stop the hung process with `kill <pid>`, then run `./deadlock_fixed` and identify the lock-ordering change.
+- **26–30 min:** Journal the wait cycle: which thread held which lock, and which lock it wanted next?
+
+Deepen later: Helgrind, condition variables, and production-style hang capture.
+
 ## Concepts to understand
 
 - **Deadlock requires four conditions** (Coffman's conditions): mutual exclusion, hold &amp; wait, no preemption, circular wait. Break any one of the four and deadlock becomes impossible.

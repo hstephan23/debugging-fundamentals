@@ -8,10 +8,21 @@
  * tools see different things. */
 #include <stdio.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define NOINLINE __attribute__((noinline))
+#else
+#define NOINLINE
+#endif
+
+static NOINLINE int *escape(int *p)
+{
+    return p;
+}
+
 static int *danger(void)
 {
     int x = 42;
-    return &x;                /* returning address of local */
+    return escape(&x);        /* returning address of local */
 }
 
 int main(void)

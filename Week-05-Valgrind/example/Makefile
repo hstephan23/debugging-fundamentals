@@ -30,6 +30,10 @@ all: $(TARGETS)
 	$(CC) $(CFLAGS) -o $@ $<
 
 check-all: all
+	@command -v valgrind >/dev/null 2>&1 || { \
+		echo "valgrind not found; install Valgrind or run the Week 6 sanitizer examples instead"; \
+		exit 127; \
+	}
 	@for t in $(TARGETS); do \
 		echo "\n===== $$t ====="; \
 		valgrind $(VALGRIND_FLAGS) ./$$t || true; \

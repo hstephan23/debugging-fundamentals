@@ -5,32 +5,17 @@
  * Run:    ./asan_demo 1    # heap overflow
  *         ./asan_demo 2    # use after free
  *         ./asan_demo 3    # stack buffer overflow
- *         ./asan_demo 4    # stack use after return
- *         ./asan_demo 5    # use after scope
- *         ./asan_demo 6    # leak (reported at exit)
+ *         ./asan_demo 4    # double free
+ *         ./asan_demo 5    # global buffer overflow
+ *         ./asan_demo 6    # leak (reported at exit where LSan is supported)
  *
  * Notice how the ASan report includes a shadow-memory diagram under each
  * error — it tells you exactly which byte was poisoned and why.
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-static int *leak_later(void)
-{
-    int x = 7;
-    return &x;              /* dangling; used by caller in case 4 */
-}
-
-static int *use_after_scope(void)
-{
-    int *p;
-    {
-        int local = 99;
-        p = &local;         /* `local` dies at the end of this block */
-    }
-    return p;
-}
+static int global[4];
 
 int main(int argc, char **argv)
 {
@@ -38,9 +23,9 @@ int main(int argc, char **argv)
 
     switch (which) {
     case 1: {               /* heap overflow */
-        int *a = malloc(sizeof(int) * 4);
+        volatile int *a = malloc(sizeof(int) * 4);
         a[4] = 0;           /* one past the end */
-        free(a);
+        free((void *)a);
         break;
     }
     case 2: {               /* use after free */
@@ -52,22 +37,28 @@ int main(int argc, char **argv)
     }
     case 3: {               /* stack buffer overflow */
         char buf[8];
-        strcpy(buf, "this is too long for 8 bytes");
+        volatile char *p = buf;
+        for (int i = 0; i < 16; i++) p[i] = 'A';
+        buf[7] = '\0';
         puts(buf);
         break;
     }
-    case 4: {               /* stack use after return */
-        int *p = leak_later();
-        printf("%d\n", *p);
+    case 4: {               /* double free */
+        volatile int *p = malloc(sizeof *p);
+        *p = 1;
+        free((void *)p);
+        free((void *)p);
         break;
     }
-    case 5: {               /* stack use after scope */
-        int *p = use_after_scope();
-        printf("%d\n", *p);
+    case 5: {               /* global buffer overflow */
+        volatile int *p = global;
+        p[4] = 99;
         break;
     }
-    case 6: {               /* leak — reported on exit by LSan */
-        (void)malloc(128);
+    case 6: {               /* leak — reported on exit where LSan is supported */
+        char *p = malloc(128);
+        p[0] = 'x';
+        printf("leaked allocation starts with %c\n", p[0]);
         break;
     }
     default:

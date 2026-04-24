@@ -4,6 +4,16 @@
 
 Learn to investigate crashes you couldn't witness live. By the end of the week, a core dump from a server crash at 3 AM should be something you can load, triage, and root-cause from your laptop the next morning — without a reproducer.
 
+## 30-minute pass
+
+- **0–5 min:** Read the concepts on core files, debug symbols, and stack frames.
+- **5–12 min:** `cd example && make`, then enable cores with `ulimit -c unlimited`.
+- **12–18 min:** Run `./crash "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"` and locate the generated `core` or `core.*` file. If your system intercepts cores, use `coredumpctl list`.
+- **18–26 min:** Open `gdb ./crash ./core`, `gdb ./crash ./core.*`, or `coredumpctl gdb crash`, then use `bt`, `frame N`, `info args`, and `info locals`.
+- **26–30 min:** Journal the crash site, the likely root cause, and the one stack frame that proved it.
+
+Deepen later: split debug info, corrupted stacks, and matching cores to logs.
+
 ## Concepts to understand
 
 - **A core dump is a snapshot of the process's memory at the moment it died.** Given the dump, the original binary, and debug info, GDB can reconstruct almost the entire crash scene: stack, locals, globals, heap.

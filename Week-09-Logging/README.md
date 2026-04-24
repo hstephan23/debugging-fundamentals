@@ -4,6 +4,16 @@
 
 Learn the tools and habits that let you debug *without* a debugger — often the only option on production machines, embedded targets, or anywhere a debugger is too heavy or too slow. Also: learn to write logs that help rather than hurt.
 
+## 30-minute pass
+
+- **0–5 min:** Read the concepts on useful logs and system-call tracing.
+- **5–12 min:** `cd example && make`, then run `LOG_LEVEL=debug ./server` long enough to inspect structured log lines. Stop it with `Ctrl-C`.
+- **12–21 min:** Run `./server &`, attach `strace -f -tt -e openat,read,write -p <pid>`, then stop both. If `strace` is unavailable, compare info and debug logs instead.
+- **21–26 min:** Run `./cpu_hog` once; if `perf` is available, capture a quick `perf record -g ./cpu_hog`.
+- **26–30 min:** Journal which signal would have found this fastest: log line, syscall trace, or profile.
+
+Deepen later: `ltrace`, `perf report`, dynamic tracing, and reworking logs in your own project.
+
 ## Concepts to understand
 
 - **`printf` debugging isn't shameful — but it is a skill.** Done well, structured, and paired with the right filters, logs are often the fastest path to insight. Done poorly, they're noise.

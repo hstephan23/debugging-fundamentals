@@ -4,6 +4,16 @@
 
 Unlock the parts of GDB that separate "tourist" users from power users: watchpoints, scripting, pretty-printing, and — the most transformative of all — reverse execution.
 
+## 30-minute pass
+
+- **0–5 min:** Read the watchpoint concept and the warning about watching `*ptr`.
+- **5–15 min:** `cd example && make`, run `./watchpoint_demo`, then open it in GDB.
+- **15–23 min:** Use `break main`, `run`, `watch secret`, and `continue` until GDB shows who writes the suspicious value.
+- **23–27 min:** If `rr` is installed, run `make rr` and `make replay`, then try `reverse-continue`. If not, repeat the watchpoint pass and focus on the evidence chain.
+- **27–30 min:** Add one useful `.gdbinit` setting or write a journal note answering: "Who changed the value, and how did I prove it?"
+
+Deepen later: Python pretty-printers, custom commands, and remote debugging.
+
 ## Concepts to understand
 
 - **Watchpoints stop on state change, not location.** `watch x` stops the program whenever `x` is written. This is how you find "who set this variable to 7?" bugs in seconds instead of hours.

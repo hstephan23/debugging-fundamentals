@@ -14,6 +14,7 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -35,20 +36,28 @@ static inline int log_level(void)
     return cached;
 }
 
-#define LOG_(lvl, lvlname, fmt, ...) do {                                 \
-    if ((lvl) >= log_level()) {                                           \
-        struct timespec _ts;                                              \
-        clock_gettime(CLOCK_REALTIME, &_ts);                              \
-        fprintf(stderr,                                                   \
-                "time=%lld.%03ld level=%s src=%s:%d " fmt "\n",           \
-                (long long)_ts.tv_sec, _ts.tv_nsec / 1000000L,            \
-                lvlname, __FILE__, __LINE__, ##__VA_ARGS__);              \
-    }                                                                      \
-} while (0)
+static inline void log_write(int lvl, const char *lvlname,
+                             const char *file, int line,
+                             const char *fmt, ...)
+{
+    if (lvl < log_level()) return;
 
-#define LOG_DEBUG(fmt, ...) LOG_(LOG_DEBUG_, "debug", fmt, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...)  LOG_(LOG_INFO_,  "info",  fmt, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...)  LOG_(LOG_WARN_,  "warn",  fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) LOG_(LOG_ERROR_, "error", fmt, ##__VA_ARGS__)
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    fprintf(stderr, "time=%lld.%03ld level=%s src=%s:%d ",
+            (long long)ts.tv_sec, ts.tv_nsec / 1000000L,
+            lvlname, file, line);
+
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputc('\n', stderr);
+}
+
+#define LOG_DEBUG(...) log_write(LOG_DEBUG_, "debug", __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_INFO(...)  log_write(LOG_INFO_,  "info",  __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARN(...)  log_write(LOG_WARN_,  "warn",  __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_ERROR(...) log_write(LOG_ERROR_, "error", __FILE__, __LINE__, __VA_ARGS__)
 
 #endif /* LOG_H */

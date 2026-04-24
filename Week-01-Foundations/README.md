@@ -4,6 +4,16 @@
 
 Build a mental model of debugging as a disciplined, reproducible process — and get your C toolchain into a state where it helps you instead of fighting you.
 
+## 30-minute pass
+
+- **0–5 min:** Read the first three concepts: hypothesis, reproducibility, and bisection.
+- **5–15 min:** `cd example`, then run `make debug` and `make release`.
+- **15–22 min:** Run both binaries with `make run-debug` and `make run-release`. Note whether optimization changes the symptom.
+- **22–27 min:** Inspect the Makefile flags and identify which ones help debugging versus release behavior.
+- **27–30 min:** Start a bug-journal entry with: symptom, first hypothesis, evidence, and next experiment.
+
+Deepen later: the manual input-reduction exercise, `git bisect`, and the undefined-behavior reading.
+
 ## Concepts to understand
 
 - **Debugging is science, not divination.** You observe a symptom, form a hypothesis, design an experiment to confirm or refute it, and iterate. Zeller's "Why Programs Fail" frames this as *scientific method for programs*.

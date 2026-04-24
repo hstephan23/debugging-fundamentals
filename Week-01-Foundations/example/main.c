@@ -13,6 +13,7 @@ int main(void)
     long got = sum_array(nums, n);
 
     printf("expected=%ld got=%ld\n", expected, got);
+    fflush(stdout);
 
     /* This assertion SHOULD pass for a correct sum_array. It often
      * doesn't, thanks to the deliberate off-by-one in utils.c reading

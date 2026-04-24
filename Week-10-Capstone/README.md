@@ -4,6 +4,16 @@
 
 Consolidate everything with a substantial bug hunt, then turn the lens outward: the habits, idioms, and structural choices that make code *easier to debug in the first place*. The best debugger is the one you didn't have to use.
 
+## 30-minute pass
+
+- **0–5 min:** Pick one playbook from `playbooks.md`: crash, hang, memory corruption, concurrency, or slowness.
+- **5–12 min:** Choose one small reproducer from the earlier weeks that matches the playbook.
+- **12–23 min:** Run the first tool the playbook recommends and capture the strongest piece of evidence.
+- **23–27 min:** Sketch the root cause or, if it is not proven yet, the next experiment that would prove or disprove it.
+- **27–30 min:** Fill one entry in `bug-journal-template.md` as a mini post-mortem.
+
+Deepen later: one full capstone option and the debuggable-code checklist.
+
 ## Concepts to understand
 
 - **Debuggability is a design attribute.** Error handling, assertions, invariants, logging hooks, deterministic tests — these aren't just "nice to have," they're what turns a six-hour bug hunt into a six-minute one.

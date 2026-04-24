@@ -4,6 +4,16 @@
 
 Build a mental model of why concurrent C code is hard, and learn to find the most common class of concurrency bug — the data race — with ThreadSanitizer. Multi-threaded bugs are famously non-reproducible; the key skill is making them reproducible and observable.
 
+## 30-minute pass
+
+- **0–5 min:** Read the distinction between data race and race condition.
+- **5–12 min:** `cd example && make`, then run `./race_counter` several times and observe the changing result.
+- **12–21 min:** Run `make tsan`, then `./tsan_race`. Read the two access stacks in the report.
+- **21–26 min:** Run `./race_counter_mutex` and `./race_counter_atomic` to confirm the fixed versions are stable.
+- **26–30 min:** Journal the shared variable, the racing accesses, and which synchronization removed the race.
+
+Deepen later: atomic memory orders, false sharing, and TSan limitations.
+
 ## Concepts to understand
 
 - **A data race** is two threads accessing the same memory location concurrently, where at least one is a write, without synchronization. Per the C11 memory model, a data race is *undefined behavior* — the compiler is free to assume it never happens.

@@ -4,6 +4,16 @@
 
 Develop real fluency with Valgrind's Memcheck — the classic, still-indispensable tool for finding memory errors in C. By the end of the week you should be able to read a Memcheck report like English and know exactly what it's telling you.
 
+## 30-minute pass
+
+- **0–5 min:** Skim the major Memcheck error categories.
+- **5–14 min:** `cd example && make`, then run `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./01_heap_overflow`.
+- **14–22 min:** Run one contrasting target, such as `./04_uninitialized` or `./07_leak`, under the same Valgrind flags.
+- **22–27 min:** Translate each report into plain English: bug class, bad line, allocation site, and why Memcheck knows.
+- **27–30 min:** Predict what `./02_use_after_free` will report before running it next time.
+
+Deepen later: `make check-all`, suppression files, and integrating Memcheck into tests.
+
 ## Concepts to understand
 
 - **Valgrind is a dynamic binary instrumentation framework.** It re-translates every instruction and layers checkers on top. It's slow (10×–50× typical) but catches things static tools cannot.

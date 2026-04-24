@@ -3,7 +3,7 @@
 # Rebuild the same sources under different sanitizers and observe what each
 # one catches.
 #
-#   make asan        -> binaries under AddressSanitizer + UBSan + LSan
+#   make asan        -> binary under AddressSanitizer; LeakSanitizer where supported
 #   make ubsan       -> binaries under UBSan only (catch UB at runtime)
 #   make clean
 #
@@ -14,7 +14,7 @@
 CC     ?= gcc
 CFLAGS_COMMON = -O1 -g3 -Wall -Wextra -Wpedantic -fno-omit-frame-pointer -std=c11
 
-ASAN_FLAGS  = -fsanitize=address,undefined -fno-sanitize-recover=all
+ASAN_FLAGS  = -fsanitize=address -fno-sanitize-recover=all
 UBSAN_FLAGS = -fsanitize=undefined -fno-sanitize-recover=undefined
 
 .PHONY: all asan ubsan clean

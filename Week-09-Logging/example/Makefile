@@ -11,6 +11,7 @@
 
 CC     ?= gcc
 CFLAGS  = -O2 -g -Wall -Wextra -Wpedantic -fno-omit-frame-pointer -std=c11
+MATHLIB = -lm
 
 TARGETS = server cpu_hog
 
@@ -21,7 +22,7 @@ server: server.c log.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 cpu_hog: cpu_hog.c
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $< $(MATHLIB)
 
 clean:
 	rm -f $(TARGETS) core core.*

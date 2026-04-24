@@ -33,9 +33,17 @@ linked_list: linked_list.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 rr: watchpoint_demo
+	@command -v rr >/dev/null 2>&1 || { \
+		echo "rr not found; install rr on Linux to use reverse debugging"; \
+		exit 127; \
+	}
 	rr record ./watchpoint_demo
 
 replay:
+	@command -v rr >/dev/null 2>&1 || { \
+		echo "rr not found; install rr on Linux to use reverse debugging"; \
+		exit 127; \
+	}
 	rr replay
 
 clean:

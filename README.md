@@ -10,7 +10,16 @@ A self-directed curriculum for becoming a confident, methodical debugger — wit
 
 ## Time commitment
 
-Plan assumes **5–8 hours/week** — roughly one evening of reading/watching plus a weekend practice session. If you only have 2 hours one week, do the **Core practice** section and skip the **Stretch** items.
+The full plan still supports **5–8 hours/week** if you want the readings, stretch work, and repeated practice. The default path, though, is now a **30-minute pass**: one focused concept, one hands-on debugging move, one short note in your bug journal.
+
+Use this rhythm for any week:
+
+- **0–5 min:** Read the goal and the 30-minute pass. Skim only the concepts needed for today's exercise.
+- **5–20 min:** Run the tool on the example program. Do not read more until you have observed real output.
+- **20–27 min:** Explain the evidence: what line, value, stack frame, report, or log entry changed your mind?
+- **27–30 min:** Write one bug-journal note and pick the next optional deep dive.
+
+The depth is still there, but it is intentionally moved behind the main path. If you have more time, continue into **Reading / watching**, the rest of **Core practice**, then **Stretch**.
 
 ## What you'll be able to do at the end
 
@@ -41,11 +50,12 @@ Core toolchain — install in Week 1:
 Each week's file follows the same shape so you can pace yourself:
 
 1. **Goal** — one sentence describing what you should walk away with.
-2. **Concepts** — the ideas to understand before touching the tools.
-3. **Reading / watching** — a short list, not an exhaustive survey.
-4. **Core practice** — the exercises that actually build skill. Do these.
-5. **Stretch** — optional deeper dives for weeks you have extra time.
-6. **Checkpoint** — a short self-assessment. If you can't pass it, loop back before moving on.
+2. **30-minute pass** — the shortest useful route through the week.
+3. **Concepts** — the ideas to understand before touching the tools.
+4. **Reading / watching** — a short list, not an exhaustive survey.
+5. **Core practice** — the exercises that actually build skill. Do these when you have more than one session.
+6. **Stretch** — optional deeper dives for weeks you have extra time.
+7. **Checkpoint** — a short self-assessment. If you can't pass it, loop back before moving on.
 
 ## The 10 weeks at a glance
 
@@ -109,9 +119,11 @@ Each `example/` directory contains a `Makefile` and at least one working C progr
 
 ## How to use this plan
 
+- **Start with the 30-minute pass.** It is the main route, not the remedial route. The longer sections are there when a topic proves important enough to keep going.
 - **Do the exercises.** You cannot learn debugging by reading about debugging. Every week has hands-on practice — treat it as the main event.
 - **Keep a bug journal.** A single text file where you record, for each bug you investigate: the symptom, what you thought it was, what it actually was, and what tipped you off. After a few weeks this becomes the most valuable artifact in the whole curriculum.
 - **Don't skip Week 1.** The methodology material looks soft next to the tooling, but it's what separates people who *know* GDB from people who can actually debug.
-- **It's fine to fall behind.** Miss a week, do it the week after. The sequence matters more than the calendar.
+- **Use a two-pass reading style.** First pass: run the example and pass the checkpoint. Second pass: read the theory that explains what you just saw.
+- **It's fine to slow down.** If a week feels important, repeat the 30-minute pass with a different example before moving on. The sequence matters more than the calendar.
 
 Good luck — and remember that every bug you fix makes the next one easier.

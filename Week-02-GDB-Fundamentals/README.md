@@ -4,6 +4,16 @@
 
 Get fluent in everyday GDB: start a program, stop at the right place, inspect what's happening, and step through to understand it. By the end of the week, GDB should feel like a natural tool — not something you look up every command for.
 
+## 30-minute pass
+
+- **0–5 min:** Skim the command table in Core practice section 1.
+- **5–18 min:** `cd example && make`, then run `gdb ./fib`. Use `break fib`, `run 10`, `bt`, `info args`, `info locals`, and `finish`.
+- **18–24 min:** Set one conditional breakpoint, such as `break fib if n == 3`, and confirm it stops only when expected.
+- **24–27 min:** Try TUI mode with `Ctrl-x a` or note why your terminal does not support it well.
+- **27–30 min:** Write the five commands you actually used and what each revealed.
+
+Deepen later: attaching to `sleeper`, silent breakpoint commands, and editor-integrated debugging.
+
 ## Concepts to understand
 
 - **Breakpoints vs. watchpoints vs. catchpoints.** This week we focus on breakpoints — stopping at a *location*. (Watchpoints on *values* come next week.)

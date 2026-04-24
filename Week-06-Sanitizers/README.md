@@ -4,13 +4,23 @@
 
 Learn the modern sanitizer family — compiler-based runtime checkers that catch memory and undefined-behavior bugs with dramatically less overhead than Valgrind. By the end of the week, sanitizer builds should be a standard part of your development loop.
 
+## 30-minute pass
+
+- **0–5 min:** Read what ASan and UBSan catch, and how that differs from Valgrind.
+- **5–14 min:** `cd example && make asan`, then run `./asan_demo` and identify the first bad line in the report.
+- **14–22 min:** Run `make ubsan`, then `./ubsan_demo` and identify the undefined behavior.
+- **22–27 min:** Compare sanitizer output to Valgrind: what is more direct, and what context is missing?
+- **27–30 min:** Write a rule of thumb for when you would try ASan/UBSan first.
+
+Deepen later: sanitizer options, LeakSanitizer, MemorySanitizer, and CI targets.
+
 ## Concepts to understand
 
 - **Sanitizers are compile-time opt-in.** You rebuild with `-fsanitize=address`, etc. The compiler inserts instrumentation; the runtime library does the bookkeeping. No special launcher needed — you run the binary normally.
 - **The main sanitizers:**
   - **AddressSanitizer (ASan):** heap overflows, stack overflows, use-after-free, use-after-return, use-after-scope, double-free. Roughly 2× overhead.
   - **UndefinedBehaviorSanitizer (UBSan):** signed overflow, out-of-range shifts, misaligned pointers, null deref, bad casts. Very low overhead; you can often ship with it.
-  - **LeakSanitizer (LSan):** memory leak detector. Ships integrated with ASan by default.
+  - **LeakSanitizer (LSan):** memory leak detector. Ships integrated with ASan on platforms that support it; Apple's ASan runtime does not support leak detection.
   - **MemorySanitizer (MSan):** tracks uninitialized reads. Only on Clang; requires instrumenting *all* dependencies, which is a real constraint.
   - **ThreadSanitizer (TSan):** data races — covered in Week 7.
 - **ASan vs. Valgrind.** ASan is far faster and catches stack bugs Valgrind can't. Valgrind catches some things ASan can't (notably, requires no recompilation; handles arbitrary binaries). You want both in your toolbox.

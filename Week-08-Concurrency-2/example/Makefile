@@ -29,6 +29,10 @@ all: $(TARGETS)
 	$(CC) $(CFLAGS) -o $@ $< $(LDLIBS)
 
 helgrind: deadlock
+	@command -v valgrind >/dev/null 2>&1 || { \
+		echo "valgrind not found; install Valgrind to use Helgrind"; \
+		exit 127; \
+	}
 	valgrind --tool=helgrind ./deadlock
 
 clean:

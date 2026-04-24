@@ -31,19 +31,37 @@ int main(void)
     for (long tick = 0; !stop; tick++) {
         LOG_DEBUG("tick value=%ld", tick);
 
-        int fd = open("/etc/hostname", O_RDONLY);
+        const char *paths[] = { "/etc/hostname", "/etc/hosts" };
+        const char *path = NULL;
+        int fd = -1;
+
+        for (size_t i = 0; i < sizeof paths / sizeof paths[0]; i++) {
+            fd = open(paths[i], O_RDONLY);
+            if (fd >= 0) {
+                path = paths[i];
+                break;
+            }
+        }
         if (fd < 0) {
-            LOG_ERROR("open_failed path=%s errno=%d", "/etc/hostname", errno);
+            LOG_ERROR("open_failed paths=%s,%s errno=%d",
+                      paths[0], paths[1], errno);
             break;
         }
         char buf[64] = {0};
         ssize_t n = read(fd, buf, sizeof buf - 1);
+        if (n < 0) {
+            LOG_ERROR("read_failed path=%s errno=%d", path, errno);
+            close(fd);
+            break;
+        }
+        buf[n] = '\0';
         close(fd);
 
         /* strip trailing newline */
         char *nl = strchr(buf, '\n'); if (nl) *nl = 0;
 
-        LOG_INFO("heartbeat tick=%ld host=%s", tick, buf);
+        LOG_INFO("heartbeat tick=%ld path=%s bytes=%zd sample=%s",
+                 tick, path, n, buf);
         sleep(1);
     }
 
