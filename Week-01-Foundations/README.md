@@ -83,8 +83,32 @@ Create `bug-journal.md`. For every non-trivial bug you investigate from now on �
 You can move to Week 2 when you can:
 
 - Explain the difference between `-O0 -g` and `-O2 -g` builds, and why both matter.
-- Name three compiler warnings you now enable by default, and what each catches.
-- Describe the scientific method version of debugging in your own words, without looking.
-- Point to your first few bug journal entries.
 
-If any of those feels shaky, spend another day on Week 1 — the rest of the plan leans on these foundations.
+The -O0 -g is for the normal build → more equivalent to what you would expect to happen. Use this most of the time. 
+The -O2 -g is for the optimized build → reality for when actually building. We want this for advanced debugging 
+and for times that normal debugging is not providing insight. 
+
+- Name three compiler warnings you now enable by default, and what each catches.
+
+-Wall -Wextra -Wpedantic 
+-Wall : strong common warnings (not all though...) 
+-Wextra : things that -Wall extra does not catch 
+-Wpedantic : checks for compatability with other machines and C compilers 
+
+- Describe the scientific method version of debugging in your own words, without looking.
+
+Solving problems through clues. We are able to diagnosis issues this way. 
+
+To start I think that we want to make a hypothesis just not assumptions. Then we go through the debugging process to see 
+if our hypothesis is backed up or not. This can take a long time, it just results in improving your hypothesis over time 
+and restarting if needed.
+
+### Real-Life example:
+
+I was debugging unit tests to figure out failures and had to get into GDB land. It was pretty scary at first, but then
+I was able to figure out the issue code. This helped me search code so that I didn't have to manual look through all code
+or just guess. Something that I think that was powerful was being able to print out values while running a specific test. 
+
+Another thing was that I had PR builds failing (I don't really want to say why, it is embarrassing)... But I wanted to 
+jump straight to GDB and realized I needed to look in the logs. The logs made it pretty clear why everything was failing.... 
+Even though it is embarrassing. I didn't format a couple files correctly, by adding in a blank line at the end.... :( 
