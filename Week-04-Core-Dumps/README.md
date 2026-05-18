@@ -1,114 +1,115 @@
-# Week 4 — Core Dumps &amp; Postmortem Debugging
+# Week 4 - Core Dumps
 
-## Goal
+## Investigation
 
-Learn to investigate crashes you couldn't witness live. By the end of the week, a core dump from a server crash at 3 AM should be something you can load, triage, and root-cause from your laptop the next morning — without a reproducer.
+A program crashed outside your interactive debugger session. You do not get to rerun casually and hope the same thing happens. Your first job is to preserve postmortem evidence and inspect the state the process left behind.
 
-## 30-minute pass
+This week is about debugging after the fact.
 
-- **0–5 min:** Read the concepts on core files, debug symbols, and stack frames.
-- **5–12 min:** `cd example && make`, then enable cores with `ulimit -c unlimited`.
-- **12–18 min:** Run `./crash "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"` and locate the generated `core` or `core.*` file. If your system intercepts cores, use `coredumpctl list`.
-- **18–26 min:** Open `gdb ./crash ./core`, `gdb ./crash ./core.*`, or `coredumpctl gdb crash`, then use `bt`, `frame N`, `info args`, and `info locals`.
-- **26–30 min:** Journal the crash site, the likely root cause, and the one stack frame that proved it.
+## Mentor Opening
 
-Deepen later: split debug info, corrupted stacks, and matching cores to logs.
+- What evidence exists after a process crashes?
+- What would you destroy by immediately changing code or rerunning with different input?
+- What do you need from the binary to make the crash readable?
+- What stack frame is likely to be the symptom rather than the cause?
+- What would make a core dump more useful than a live rerun?
 
-## Concepts to understand
+## First Claim
 
-- **A core dump is a snapshot of the process's memory at the moment it died.** Given the dump, the original binary, and debug info, GDB can reconstruct almost the entire crash scene: stack, locals, globals, heap.
-- **Core files are disabled by default on many systems.** `ulimit -c unlimited` enables them for the shell; `/proc/sys/kernel/core_pattern` controls where they go. On modern Linux, `systemd-coredump` intercepts and stores them — retrieve with `coredumpctl`.
-- **Matching binary + matching debug info is non-negotiable.** If you loaded a core against a binary that's been rebuilt, backtraces will lie to you. Ship with split debug info (`.debug` files) and archive them.
-- **Separate debug info** (`objcopy --only-keep-debug`, `strip`, then `add-symbol-file` or `set debug-file-directory`) is the production pattern — lets you ship small stripped binaries while keeping full debug info available for postmortem.
-- **A crashed process tells you *where* it died; your job is to work out *why*.** That usually means walking the stack, inspecting arguments and locals in each frame, and correlating with the code.
+Before enabling or inspecting core dumps, write:
 
-## Reading / watching
+```text
+Claim:
+Confidence:
+Evidence I expect in the core:
+Frame I expect to inspect first:
+Evidence that would weaken this:
+```
 
-- `man core`, `man 5 core`, `man coredumpctl`.
-- The Linux kernel documentation on `core_pattern`.
-- GDB manual chapters on "Files" (especially separate debug info) and "Examining Memory."
-- Julia Evans' zine/article on debugging with core dumps — short and friendly.
+## Evidence Round 1
 
-## Core practice
-
-### 1. Enable core dumps on your system
+Build and reproduce the crash:
 
 ```bash
-ulimit -c unlimited              # enable for this shell
-cat /proc/sys/kernel/core_pattern # see where they go
+cd Week-04-Core-Dumps/example
+make clean
+make
+ulimit -c unlimited
+./crash "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 ```
 
-If the pattern is a pipe (`|/usr/lib/systemd/systemd-coredump ...`), you're using systemd-coredump — try `coredumpctl list`, `coredumpctl info`, `coredumpctl gdb`. Otherwise you'll find a `core` file or `core.PID` in the working directory.
+Record:
 
-Write a program that deliberately segfaults (e.g., deref a null pointer). Run it. Confirm a core file appears. Load it:
+- the exact input
+- whether a core file appeared locally
+- whether your system stores cores through `coredumpctl`
+- the crash signal or terminal message
 
-```
-gdb ./a.out ./core
-```
+## Mentor Interruption
 
-Run `bt` and confirm you're looking at the crash location.
+- What did you preserve before changing anything?
+- Is the crash input part of the evidence?
+- Are debug symbols available?
+- What would be different if this happened on a production machine?
+- Which fact would you lose if you cleaned the directory now?
 
-### 2. Investigate a realistic crash
+## Evidence Round 2
 
-Write a small program with a **plausible** bug:
-
-- a function that calls `strcpy` into a fixed-size buffer,
-- a caller that occasionally passes an overlong string,
-- a third function that uses the buffer afterwards.
-
-Run until it crashes. Load the core. Don't just stop at `bt` — practice:
-
-- `frame N` into each function along the stack
-- `info args` and `info locals` in each
-- `p *argv` style dereferences to see what inputs the program had
-- `x/s buffer` to see the raw contents of suspicious memory
-
-Write up your findings in the bug journal as if you were filing a post-mortem report: what crashed, where, why, and what you'd change to prevent it.
-
-### 3. Separate debug info
-
-Practice the production pattern:
+Inspect the postmortem state. Use the command that fits your system:
 
 ```bash
-gcc -g -O2 -o myprog main.c
-objcopy --only-keep-debug myprog myprog.debug
-strip --strip-debug myprog
-objcopy --add-gnu-debuglink=myprog.debug myprog
+gdb ./crash ./core
 ```
 
-Confirm:
+or:
 
-- `file myprog` shows it's stripped.
-- GDB still finds debug info via the `.gnu_debuglink` section if `myprog.debug` is in the same directory or a `.debug/` subdirectory.
+```bash
+coredumpctl gdb crash
+```
 
-Now imagine archiving `myprog.debug` somewhere alongside every build. Three months from now, a core arrives — you fetch the matching `.debug` file and you're back in business.
+Inside GDB:
 
-### 4. Learn to read a stack that's been corrupted
+```gdb
+bt
+frame 2
+info args
+info locals
+```
 
-Sometimes the crash scribbled over the stack and `bt` shows `??` for frames. Learn the fallbacks:
+If no core is available, write the operating-system reason and inspect what evidence you would need: binary path, input, crash signal, debug symbols, and core-storage policy.
 
-- `info registers` — what's in `rbp`/`rsp`/`rip` at the moment of death?
-- `x/32xw $rsp` — raw stack bytes, often reveals strings, pointers, or recognizable values
-- `disassemble $rip` — what instruction caused the signal?
-- Stack backtrace with `bt full` to see any locals GDB can still reconstruct
+## Debrief
 
-This is uncomfortable territory the first time. Staying calm and reading the raw state is the skill.
+Core dumps are evidence snapshots. They let you ask what the process knew at the crash, not what a later rerun happens to show. The mature debugging move is to preserve the artifact, verify symbols, inspect the stack, and only then decide what to rerun.
 
-### 5. Correlate core with logs
+## Apprentice Notes
 
-Have your program write a log line including its PID before the crash. Then correlate the core (`coredumpctl info`) with the log: same PID, same timestamp, same host. In a real incident, this chain of evidence is what lets you tie "the crash" to "the user request that triggered it."
+Write one note:
 
-## Stretch
+```text
+Symptom:
+Crash artifact:
+First claim:
+Experiment:
+Evidence:
+Model update:
+Next move:
+Prevention:
+```
 
-- Set up a minimal crash-reporting pipeline of your own: a wrapper script that, on crash, moves the core to a dated directory with the binary hash, and writes a small manifest.
-- Read about signal handlers and the `SIGSEGV`/`SIGBUS` distinction. Write a signal handler that prints a backtrace (using `backtrace()` from `execinfo.h`) before exiting.
-- Look up `gcore` — it takes a core dump of a *running* process without killing it. Useful for "this process is wedged, grab a snapshot before I restart it."
+## Mentor Rubric
 
-## Checkpoint
+Strong answers:
 
-You can move to Week 5 when you can:
+- preserve the crashing input and artifact
+- name whether the core came from a file or `coredumpctl`
+- distinguish crashing frame from root-cause frame
+- inspect args and locals before changing code
+- identify what production crash reports should capture
 
-- Enable core dumps, crash a program deliberately, and load the core in GDB.
-- Walk a stack in a core and explain what each frame did, based on locals and args.
-- Set up separate debug info and load it correctly.
-- Describe how you'd investigate a core that arrived without a reproducer, step by step.
+Weak answers:
+
+- rerun repeatedly without preserving the first crash
+- inspect only the top frame
+- ignore missing symbols
+- treat lack of local `core` file as lack of postmortem evidence

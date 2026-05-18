@@ -1,141 +1,123 @@
-# Week 3 — Advanced GDB
+# Week 3 - Advanced GDB
 
-## Goal
+## Investigation
 
-Unlock the parts of GDB that separate "tourist" users from power users: watchpoints, scripting, pretty-printing, and — the most transformative of all — reverse execution.
+The program ends with suspicious state. The visible symptom is not the interesting moment. The interesting moment is when the state first changed.
 
-## 30-minute pass
+This week trains causality: do not ask only where you noticed the bad value. Ask who wrote it.
 
-- **0–5 min:** Read the watchpoint concept and the warning about watching `*ptr`.
-- **5–15 min:** `cd example && make`, run `./watchpoint_demo`, then open it in GDB.
-- **15–23 min:** Use `break main`, `run`, `watch secret`, and `continue` until GDB shows who writes the suspicious value.
-- **23–27 min:** If `rr` is installed, run `make rr` and `make replay`, then try `reverse-continue`. If not, repeat the watchpoint pass and focus on the evidence chain.
-- **27–30 min:** Add one useful `.gdbinit` setting or write a journal note answering: "Who changed the value, and how did I prove it?"
+## Mentor Opening
 
-Deepen later: Python pretty-printers, custom commands, and remote debugging.
+- Which value is suspicious?
+- Where did you first observe it?
+- Why might the observation point be later than the cause?
+- What would prove who changed the value?
+- What is fragile about watching `*ptr` instead of a stable variable?
 
-## Concepts to understand
+## First Claim
 
-- **Watchpoints stop on state change, not location.** `watch x` stops the program whenever `x` is written. This is how you find "who set this variable to 7?" bugs in seconds instead of hours.
-- **Hardware vs. software watchpoints.** Hardware watchpoints (x86 has 4) are fast. Software watchpoints single-step every instruction and are glacial — GDB will warn you when it falls back to them.
-- **Pretty printers** turn your opaque structs into readable output. GDB ships with pretty-printers for glibc types; you can write your own in Python.
-- **GDB's Python API** lets you automate almost anything — custom commands, new pretty-printers, hooks that fire on stops.
-- **Reverse execution** means stepping *backwards* in time. Native GDB record mode is slow but works; the `rr` tool from Mozilla is production-quality and fast enough for real use.
+Before using watchpoints, write:
 
-## Reading / watching
-
-- *Debugging with GDB*, chapters on watchpoints, Python scripting, and process record.
-- Mozilla's `rr` documentation — especially the "Usage" and "Chaos mode" pages.
-- Greg Law's follow-up talk "More GDB tips."
-- A few examples of `.gdbinit` and Python pretty-printers from real projects (glibc's, CPython's).
-
-## Core practice
-
-### 1. Watchpoints
-
-Write a program where a global or struct field gets unexpectedly modified. Hunt it with:
-
-- `watch var` — break on write
-- `rwatch var` — break on read
-- `awatch var` — break on either
-- Watch on an expression, e.g. `watch *ptr` or `watch buf[5]`
-
-Things to notice:
-
-- A watchpoint on a local variable goes out of scope when the function returns — GDB deletes it automatically.
-- Watching a dereferenced pointer watches the *current target*, not the pointer itself. If the pointer gets reassigned, you're now watching stale memory. Understand this — it catches everyone once.
-
-### 2. Pretty printers
-
-Pick a small struct from your code — a linked list node, an intrusive hash table entry, something with a few fields and a pointer. Write a Python pretty-printer for it:
-
-```python
-# my_printers.py
-import gdb
-
-class NodePrinter:
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return f"Node(value={self.val['value']}, next={self.val['next']})"
-
-def lookup(val):
-    if str(val.type) == 'struct node':
-        return NodePrinter(val)
-    return None
-
-gdb.pretty_printers.append(lookup)
+```text
+Claim:
+Confidence:
+State I need to watch:
+Write that would support my claim:
+Write that would weaken my claim:
 ```
 
-Load it: `source my_printers.py`. Now `p some_node` uses your formatter.
+## Evidence Round 1
 
-### 3. Custom commands in Python
+Build and observe the program:
 
-Write a GDB command that, say, dumps every element of your linked list:
-
-```python
-class PrintList(gdb.Command):
-    def __init__(self):
-        super().__init__("plist", gdb.COMMAND_USER)
-    def invoke(self, arg, from_tty):
-        node = gdb.parse_and_eval(arg)
-        while int(node) != 0:
-            print(node.dereference()['value'])
-            node = node.dereference()['next']
-PrintList()
+```bash
+cd Week-03-Advanced-GDB/example
+make clean
+make
+./watchpoint_demo
+gdb ./watchpoint_demo
 ```
 
-Now `plist head` walks the list. For anything larger than a toy program, small commands like this pay for themselves in minutes.
+Inside GDB:
 
-### 4. Reverse debugging — the headline skill
-
-If you remember one thing from the whole curriculum, let it be this: *you can step backwards*.
-
-Install `rr` (Linux, x86-64 or aarch64):
-
-```
-rr record ./my_program some args
-rr replay
+```gdb
+break main
+run
+watch secret
+continue
+continue
+continue
 ```
 
-Inside `rr replay` you get a normal GDB prompt, but now `reverse-continue`, `reverse-next`, `reverse-step`, and `reverse-finish` work. The classic workflow:
+At each stop, record:
 
-1. Run until the crash.
-2. In the replay, `continue` — you land at the crash.
-3. `watch bad_var` then `reverse-continue` — GDB travels back to the exact moment `bad_var` got its bad value.
+- the old value
+- the new value
+- the source line
+- the stack frame
+- whether that write explains the final symptom
 
-Practice this at least three times on programs of your own. The first time it works, it will feel like cheating.
+## Mentor Interruption
 
-If you can't use `rr`, try GDB's built-in `target record-full` — same idea, much slower, single-threaded only.
+- Did the watchpoint stop where the value was noticed or where it changed?
+- Which write is legitimate setup?
+- Which write first violates your model?
+- What does the stack say about who caused it?
+- Are you watching the value, the pointer, or the memory currently pointed to?
 
-### 5. `.gdbinit` hygiene
+## Evidence Round 2
 
-Start a real `.gdbinit`. Recommended minimum:
+If `rr` is installed, record and replay:
 
+```bash
+make rr
+make replay
 ```
-set history save on
-set history size 10000
-set print pretty on
-set print array on
-set print array-indexes on
-set pagination off
-set confirm off
+
+Inside replay:
+
+```gdb
+continue
+watch secret
+reverse-continue
+bt
 ```
 
-Add aliases and macros as you find yourself repeating commands. Keep it small — a `.gdbinit` that does magic is a `.gdbinit` that confuses future-you.
+If `rr` is not installed, repeat the watchpoint pass and write what reverse execution would have let you test.
 
-## Stretch
+## Debrief
 
-- Read the source of a well-known pretty-printer package (e.g., `libstdc++`'s Python printers).
-- Experiment with `rr`'s chaos mode — it randomizes thread scheduling, shaking out races you'd never hit otherwise.
-- Try remote debugging: `gdbserver` on one machine, `gdb` connecting from another. Useful for embedded work or debugging inside Docker containers.
+Watchpoints, debugger scripting, and reverse execution are tools for finding causality through state changes. They are most useful when the symptom is far away from the cause.
 
-## Checkpoint
+The mature move is to stop reading source in order and instead ask the runtime who changed the state.
 
-You can move to Week 4 when you can:
+## Apprentice Notes
 
-- Use `watch`, `rwatch`, and `awatch` correctly, and explain why watching `*ptr` is fragile.
-- Write a small Python pretty-printer for a struct of your own.
-- Record and replay a program with `rr`, then use `reverse-continue` with a watchpoint to find the moment a bad value was written.
-- Point to your working `.gdbinit`.
+Write one note:
+
+```text
+Suspicious state:
+First claim:
+Watchpoint:
+Evidence:
+Model update:
+Next move:
+Prevention:
+```
+
+## Mentor Rubric
+
+Strong answers:
+
+- identify the watched state precisely
+- distinguish the bad write from earlier legitimate writes
+- name the stack frame that caused the state change
+- explain what reverse execution would add
+- describe a future invariant or assertion that would catch the state earlier
+
+Weak answers:
+
+- stop at the final bad value without finding the write
+- say "watchpoint found it" without naming the write
+- watch unstable pointer targets without noticing
+- use reverse execution as a trick instead of a causality tool
