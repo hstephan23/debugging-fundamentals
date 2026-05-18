@@ -1,128 +1,126 @@
-# Week 10 — Capstone &amp; Writing Debuggable Code
+# Week 10 - Capstone
 
-## Goal
+## Investigation
 
-Consolidate everything with a substantial bug hunt, then turn the lens outward: the habits, idioms, and structural choices that make code *easier to debug in the first place*. The best debugger is the one you didn't have to use.
+Choose one failure shape: crash, hang, memory corruption, concurrency, or slowness. Your job is to run a complete investigation and defend the postmortem.
 
-## 30-minute pass
+This week is not about using every tool. It is about choosing a playbook, producing evidence, and explaining why your conclusion follows.
 
-- **0–5 min:** Pick one playbook from `playbooks.md`: crash, hang, memory corruption, concurrency, or slowness.
-- **5–12 min:** Choose one small reproducer from the earlier weeks that matches the playbook.
-- **12–23 min:** Run the first tool the playbook recommends and capture the strongest piece of evidence.
-- **23–27 min:** Sketch the root cause or, if it is not proven yet, the next experiment that would prove or disprove it.
-- **27–30 min:** Fill one entry in `bug-journal-template.md` as a mini post-mortem.
+## Mentor Opening
 
-Deepen later: one full capstone option and the debuggable-code checklist.
+- What kind of failure is this?
+- Which playbook from `playbooks.md` applies first?
+- What evidence must be preserved before changing anything?
+- What would make your first theory false?
+- What prevention step would make this easier next time?
 
-## Concepts to understand
+## First Claim
 
-- **Debuggability is a design attribute.** Error handling, assertions, invariants, logging hooks, deterministic tests — these aren't just "nice to have," they're what turns a six-hour bug hunt into a six-minute one.
-- **Assertions are free documentation that also fire at runtime.** An invariant written in English is a comment. An invariant written as `assert(x != NULL)` is also enforced.
-- **Crash early, crash loudly.** Detecting a corrupted invariant at the moment it happens beats detecting its consequences three modules later.
-- **Reproducibility is the biggest multiplier.** A bug you can reproduce on demand is a bug you can fix. Most debugging effort in the real world goes into *getting* a reproducer — seeds, logs, captures, core dumps.
-- **Writing up a bug is part of fixing it.** A post-mortem style writeup — even for a small bug — forces you to articulate what actually happened, and helps the next person (often future-you).
+Before choosing tools, write:
 
-## Reading / watching
+```text
+Failure class:
+Claim:
+Confidence:
+First playbook:
+Evidence that would support this:
+Evidence that would weaken this:
+```
 
-- John Regehr, "Write Fuzzable Code" — short, opinionated, transferable.
-- Jim Roskind &amp; others, "The Sane Way to Use `assert`" — assertions are surprisingly controversial; read both sides.
-- Your own bug journal from the last nine weeks. Read it end-to-end. Look for patterns.
+## Evidence Round 1
 
-## Capstone project (bulk of the week)
+Pick one previous example or a small C program of your own. Start with one playbook:
 
-Pick one and commit seriously:
+```bash
+sed -n '1,220p' Week-10-Capstone/playbooks.md
+```
 
-### Option A — "Inherited codebase" bug hunt
+Then run the first tool the playbook recommends. Examples:
 
-Fork an open-source C project of modest size (say, 5k–50k LOC) — examples: `sqlite`, `musl`, `redis`, `tmux`, `curl`, or a smaller tool like `jq`. Pick a real open bug from its issue tracker that looks tractable. Reproduce it locally. Use every tool you've learned — GDB, sanitizers, logs — to diagnose root cause. Don't just read code; drive *from* the bug back to its source.
+```bash
+gdb ./program ./core
+valgrind --leak-check=full --track-origins=yes ./program
+./program
+gdb -p <pid>
+perf record -g ./program
+```
 
-Write up what you found as if it were a post-mortem:
+Record the strongest piece of evidence and the claim it changes.
 
-- Symptom
-- Reproducer
-- Investigation (what you tried, what it told you)
-- Root cause
-- Proposed fix (you don't have to land it — but sketch it)
+## Mentor Interruption
 
-### Option B — "Planted bugs" gauntlet
+- Why did you choose that playbook?
+- What evidence did you preserve?
+- What did the tool show directly?
+- What are you inferring?
+- What remains unproven?
 
-Take a program you've written. Hand it to a friend (or use a random seed to generate mutations) to introduce 5–10 bugs: some memory, some concurrency, some logic, some performance. Don't look at what they changed. Run your debugging playbook on each as if it were a production incident, using the appropriate tool for each class of bug. Time yourself. Note which kinds of bugs you're fast at and which you're slow at.
+## Evidence Round 2
 
-### Option C — Build a "debuggable by construction" project from scratch
+Run one narrower experiment. It must reduce uncertainty from Round 1.
 
-Pick a small system (a line-based HTTP server, a shell, a key-value store) and build it end-to-end with every debuggability practice baked in from the start:
+Examples:
 
-- Two build modes (debug, release with separate debug info archived).
-- Sanitizer CI target.
-- Valgrind CI target.
-- Structured logging with runtime log level.
-- Assertions on every non-trivial invariant.
-- A deterministic test harness; a fuzz harness; a stress-test harness.
-- Per-request/operation context that flows through logs.
+```bash
+# inspect a caller frame after the crash-site frame
+gdb ./program ./core
+```
 
-Use it. Deliberately break it. Observe how much faster you find things.
+```bash
+# compare sanitizer evidence with Valgrind evidence
+make asan
+./program
+```
 
-## Writing debuggable code — a checklist
+```bash
+# compare a suspected race with a synchronized version
+./race_counter
+./race_counter_mutex
+```
 
-Distill this into a note you keep and reread periodically:
+Write whether the second experiment supports, weakens, or redirects your model.
 
-### Defensive compilation
+## Debrief
 
-- `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` by default; fix every warning.
-- `-fsanitize=address,undefined` in dev and CI.
-- `-D_FORTIFY_SOURCE=2 -fstack-protector-strong` in release.
-- Ship with debug info, strip it from the binary, archive the `.debug` file.
+Produce a short postmortem:
 
-### Error handling
+- symptom
+- reproducer or preserved artifact
+- investigation path
+- strongest evidence
+- root cause or best current theory
+- false lead avoided
+- prevention step
 
-- Every function that can fail should return a status; every caller should handle it.
-- Don't silently swallow errors. Log them, even at `debug` level.
-- Validate inputs at public boundaries. Trust internal invariants (and assert them).
-- Use `goto cleanup;` style for resource cleanup in C — it's a feature, not a smell.
+The mentor should challenge any sentence that does not connect to evidence.
 
-### Assertions &amp; invariants
+## Apprentice Notes
 
-- Assert preconditions on public functions.
-- Assert postconditions on complex returns.
-- Assert invariants inside long functions.
-- Keep assertions on in production if you can afford it. `assert()` aborts on failure, which is loud but informative — usually better than silent corruption.
-- `static_assert` for compile-time invariants.
+Write the final note:
 
-### Structured data and logs
+```text
+Failure class:
+First claim:
+Evidence round 1:
+Model update:
+Evidence round 2:
+Conclusion:
+Prevention:
+```
 
-- Every request/operation carries an ID. That ID appears in every log line.
-- Key=value logs, one line per event.
-- A way to raise the log level at runtime (signal or config reload) so you can "turn on debug" without restart.
+## Mentor Rubric
 
-### Testability
+Strong answers:
 
-- Pure functions where possible — inputs in, outputs out, no globals.
-- Inject dependencies (time, randomness, file I/O) so tests can control them.
-- A deterministic mode for your RNG, scheduler, clocks.
-- Tests fast enough to run on every save. Slow tests get skipped; skipped tests rot.
+- choose a playbook from the symptom
+- preserve evidence before changing state
+- explain why each tool was chosen
+- make a conclusion proportional to the evidence
+- include a concrete prevention step
 
-### Reproducibility
+Weak answers:
 
-- Tests log their seed. A failing test tells you the exact seed to replay.
-- Crash reports capture: binary hash, log tail, core dump, system info.
-- A one-liner to reproduce: `./run --seed=12345 --input=./fixtures/bug23`.
-
-## Retrospective (the actual last thing you do)
-
-Before closing out the curriculum, write a retrospective in your bug journal:
-
-- Which week changed your practice the most?
-- Which tool did you think you'd use constantly but don't?
-- Which one surprised you?
-- What will you build into your default setup (editor config, `.gdbinit`, Makefile template) going forward?
-- What will you skip until you actually need it again?
-
-Then file the journal somewhere permanent. A year from now it will tell you things no blog post can.
-
-## Checkpoint — you're done when
-
-- Your capstone project has a written post-mortem (for Option A/B) or a README demonstrating its debuggability features (Option C).
-- You have a personal debugging toolkit: `.gdbinit`, Makefile template with sanitizer and Valgrind targets, logging macros, bug-journal template.
-- You can walk someone else through your end-to-end process for investigating: a crash, a memory bug, a race, a hang, a slow program. Five different playbooks, each under 60 seconds to describe.
-
-Congratulations. You're a debugger.
+- use every tool without a question
+- skip the artifact or reproducer
+- write a postmortem that starts with the fix instead of the evidence
+- claim certainty when the investigation only supports a theory
