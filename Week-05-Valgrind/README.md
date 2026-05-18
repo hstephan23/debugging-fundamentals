@@ -1,126 +1,107 @@
-# Week 5 — Memory Bugs with Valgrind
+# Week 5 - Valgrind
 
-## Goal
+## Investigation
 
-Develop real fluency with Valgrind's Memcheck — the classic, still-indispensable tool for finding memory errors in C. By the end of the week you should be able to read a Memcheck report like English and know exactly what it's telling you.
+You have a bug buffet: one tiny C program per memory failure class. The assignment is not to memorize Valgrind output. The assignment is to reconstruct the ownership and lifetime story from the report.
 
-## 30-minute pass
+Every Memcheck report is asking: was this byte allocated, initialized, and still owned by this code path?
 
-- **0–5 min:** Skim the major Memcheck error categories.
-- **5–14 min:** `cd example && make`, then run `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./01_heap_overflow`.
-- **14–22 min:** Run one contrasting target, such as `./04_uninitialized` or `./07_leak`, under the same Valgrind flags.
-- **22–27 min:** Translate each report into plain English: bug class, bad line, allocation site, and why Memcheck knows.
-- **27–30 min:** Predict what `./02_use_after_free` will report before running it next time.
+## Mentor Opening
 
-Deepen later: `make check-all`, suppression files, and integrating Memcheck into tests.
+- What memory contract do you think the program violated?
+- What would an invalid write prove that a leak report would not?
+- What allocation or lifetime question should the first run answer?
+- What line in a report would connect the symptom to the allocation site?
+- What would you inspect if the report points into helper code?
 
-## Concepts to understand
+## First Claim
 
-- **Valgrind is a dynamic binary instrumentation framework.** It re-translates every instruction and layers checkers on top. It's slow (10×–50× typical) but catches things static tools cannot.
-- **Memcheck tracks two things per byte: is it allocated, and is it initialized?** Nearly every Memcheck error reduces to one of those questions being answered "no."
-- **The major error categories:**
-  - *Invalid read/write* — reading or writing unallocated memory (heap overflow, use-after-free, wild pointer).
-  - *Use of uninitialized value* — using memory whose contents were never written.
-  - *Memory leak* — allocations that were never freed. Memcheck distinguishes *definitely lost*, *indirectly lost*, *possibly lost*, and *still reachable*.
-  - *Mismatched free* — `free()` on a `new[]`, or `malloc` / `delete`, or double-free.
-- **Suppression files** let you silence warnings you've investigated and deemed unfixable (e.g., in third-party libraries). Use them sparingly and document why.
-- **Memcheck misses stack overflows and doesn't cover all of the standard library.** It's superb for heap bugs; weak on stack corruption. That's where ASan (next week) complements it.
+Before running Valgrind, write:
 
-## Reading / watching
-
-- Valgrind manual, Memcheck section — read it cover to cover at least once. It's short and everything matters.
-- "Valgrind Quick Start" from the official site.
-- A couple of real-world Valgrind war stories (Julia Evans has several short posts; so does LWN.net).
-
-## Core practice
-
-### 1. Make friends with the output format
-
-Compile with `-g -O0`. Run a simple bug:
-
-```c
-// leak.c
-#include <stdlib.h>
-int main(void) {
-    int *p = malloc(sizeof(int) * 10);
-    p[10] = 42;           // heap overflow
-    // no free             // leak
-    return 0;
-}
+```text
+Claim:
+Confidence:
+Bug class I expect:
+Report field I expect to matter:
+Evidence that would weaken this:
 ```
 
-Run:
+## Evidence Round 1
 
-```
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./leak
-```
+Build and run the first target:
 
-Read every line of the output. Map each reported error to the concept:
-
-- Which line is the heap overflow?
-- Which allocation does the leak report point back to?
-- What does "1 block are definitely lost" actually mean?
-
-### 2. Common patterns to reproduce deliberately
-
-Build a bug buffet — one tiny program per bug — and diagnose each:
-
-1. Buffer overflow on the heap
-2. Use-after-free (free, then dereference)
-3. Double-free
-4. Use of uninitialized memory (`malloc` without initializing, then read)
-5. Forgetting the null terminator on a string
-6. Off-by-one writing the sentinel
-7. Memory leak with a pointer lost mid-function
-8. Use of a stack variable after the function returned (Memcheck will struggle with this — that's the point)
-
-For each, read the Memcheck report and *predict* what it will say before re-running. This is how you learn to diagnose from the report alone.
-
-### 3. `--track-origins=yes`
-
-This flag makes Memcheck track, for uninitialized-value errors, where the uninitialized memory originated. It's slower, so it's off by default — but during investigation it's the difference between "something uninitialized somewhere" and "here is the exact malloc that was never written to."
-
-Run a reproducer with and without the flag. Notice the difference in the report.
-
-### 4. Suppressions
-
-Write a small program that intentionally uses a library with a known "leak" that you want to ignore (or fake it with a helper function). Generate a suppression:
-
-```
-valgrind --gen-suppressions=yes ./myprog
+```bash
+cd Week-05-Valgrind/example
+make clean
+make
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./01_heap_overflow
 ```
 
-Then write a `.supp` file with the suppressions you deliberately want, and invoke:
+Record:
 
+- the error category
+- the bad access line
+- the allocation site
+- whether the memory was unallocated, freed, uninitialized, or leaked
+- why Memcheck knows
+
+## Mentor Interruption
+
+- Which bytes were invalid, missing, or uninitialized?
+- Did the report identify the bad use, the bad allocation, or both?
+- What is direct report evidence?
+- What ownership story are you inferring?
+- What code-review pattern would have caught this earlier?
+
+## Evidence Round 2
+
+Run a contrasting target under the same flags:
+
+```bash
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./04_uninitialized
 ```
-valgrind --suppressions=./my.supp ./myprog
+
+or:
+
+```bash
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./07_leak
 ```
 
-Get a feel for suppression syntax. Rule of thumb: if you're writing a suppression, leave a comment explaining *why* — otherwise the next person just inherits a silence.
+Before running, predict the category. After running, write what changed in your ownership or initialization model.
 
-### 5. Integrate Valgrind into your test run
+## Debrief
 
-Modify your `Makefile` so `make check-mem` runs your test suite under Memcheck with exit code 1 on errors:
+Valgrind is slow because it is watching memory closely. Use that cost to answer precise ownership questions. A good report reading connects bad access, allocation site, initialization state, and cleanup path.
 
-```make
-check-mem:
-    valgrind --leak-check=full --error-exitcode=1 ./run_tests
+The report is not the final explanation. It is the evidence that lets you reconstruct the explanation.
+
+## Apprentice Notes
+
+Write one note:
+
+```text
+Symptom:
+Expected bug class:
+Valgrind command:
+Report evidence:
+Ownership model update:
+Next move:
+Prevention:
 ```
 
-Once Memcheck is wired into your test target, it catches bugs on every run — and you stop forgetting to use it.
+## Mentor Rubric
 
-## Stretch
+Strong answers:
 
-- Try other Valgrind tools: `cachegrind` for cache behavior, `callgrind` for call graphs, `massif` for heap profiling. You won't use them every day but knowing they exist is valuable.
-- Read one of the Memcheck papers from the Valgrind team (Nethercote &amp; Seward). The design choices are elegant.
-- Compare output between Valgrind and an ASan build of the same bug (preview of next week). Notice what each tool catches that the other misses.
+- classify the report correctly
+- name both bad-use and allocation evidence when present
+- explain initialized versus allocated memory
+- distinguish "definitely lost" from reachable memory when leaks appear
+- propose a prevention pattern such as clearer ownership, cleanup paths, or bounds checks
 
-## Checkpoint
+Weak answers:
 
-You can move to Week 6 when you can:
-
-- Explain what Memcheck tracks per byte and how that maps to the main error categories.
-- Read a `==PID==` report and translate it to a specific line of code and a specific bug class.
-- Tell "definitely lost" from "still reachable" in a leak report and explain when each matters.
-- Use `--track-origins=yes` appropriately and know its cost.
-- Run your test suite under Memcheck as a CI-style gate.
+- say "Valgrind found a bug" without naming the category
+- ignore allocation-site evidence
+- fix the symptom without explaining ownership
+- suppress reports before understanding them

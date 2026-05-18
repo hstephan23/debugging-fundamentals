@@ -1,118 +1,106 @@
-# Week 6 — Sanitizers (ASan, UBSan, LSan, MSan)
+# Week 6 - Sanitizers
 
-## Goal
+## Investigation
 
-Learn the modern sanitizer family — compiler-based runtime checkers that catch memory and undefined-behavior bugs with dramatically less overhead than Valgrind. By the end of the week, sanitizer builds should be a standard part of your development loop.
+The same small C examples are rebuilt with runtime instrumentation. Sanitizers usually fail loudly and near the bad operation. Your job is to turn that precise failure into a root-cause investigation without stopping at the report.
 
-## 30-minute pass
+This week is about using sharp evidence without becoming lazy about explanation.
 
-- **0–5 min:** Read what ASan and UBSan catch, and how that differs from Valgrind.
-- **5–14 min:** `cd example && make asan`, then run `./asan_demo` and identify the first bad line in the report.
-- **14–22 min:** Run `make ubsan`, then `./ubsan_demo` and identify the undefined behavior.
-- **22–27 min:** Compare sanitizer output to Valgrind: what is more direct, and what context is missing?
-- **27–30 min:** Write a rule of thumb for when you would try ASan/UBSan first.
+## Mentor Opening
 
-Deepen later: sanitizer options, LeakSanitizer, MemorySanitizer, and CI targets.
+- What kind of undefined behavior do you expect?
+- What does a sanitizer report prove directly?
+- What does it not prove by itself?
+- How would you distinguish the bad operation from the design mistake that allowed it?
+- When would you choose ASan before Valgrind, or Valgrind before ASan?
 
-## Concepts to understand
+## First Claim
 
-- **Sanitizers are compile-time opt-in.** You rebuild with `-fsanitize=address`, etc. The compiler inserts instrumentation; the runtime library does the bookkeeping. No special launcher needed — you run the binary normally.
-- **The main sanitizers:**
-  - **AddressSanitizer (ASan):** heap overflows, stack overflows, use-after-free, use-after-return, use-after-scope, double-free. Roughly 2× overhead.
-  - **UndefinedBehaviorSanitizer (UBSan):** signed overflow, out-of-range shifts, misaligned pointers, null deref, bad casts. Very low overhead; you can often ship with it.
-  - **LeakSanitizer (LSan):** memory leak detector. Ships integrated with ASan on platforms that support it; Apple's ASan runtime does not support leak detection.
-  - **MemorySanitizer (MSan):** tracks uninitialized reads. Only on Clang; requires instrumenting *all* dependencies, which is a real constraint.
-  - **ThreadSanitizer (TSan):** data races — covered in Week 7.
-- **ASan vs. Valgrind.** ASan is far faster and catches stack bugs Valgrind can't. Valgrind catches some things ASan can't (notably, requires no recompilation; handles arbitrary binaries). You want both in your toolbox.
-- **You cannot mix some sanitizers.** ASan and MSan together don't work — pick one per build. ASan + UBSan + LSan happily coexist.
-- **Shadow memory.** ASan maintains a "shadow" map with one byte per 8 bytes of application memory, encoding which bytes are poisoned (inaccessible). Knowing this helps you reason about what ASan can and can't see.
+Before running the sanitizer builds, write:
 
-## Reading / watching
-
-- AddressSanitizer paper (Serebryany et al., USENIX ATC 2012). Short, readable, classic.
-- Clang documentation on each sanitizer (it's the canonical reference, even if you compile with GCC).
-- "How ASAN works" — the LLVM blog and the Google Testing Blog both have good writeups.
-
-## Core practice
-
-### 1. Rebuild your Makefile with sanitizer targets
-
-Add these to your Makefile:
-
-```make
-CFLAGS_ASAN   = -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer
-CFLAGS_UBSAN  = -O2 -g -fsanitize=undefined -fno-sanitize-recover=undefined
-
-asan: CFLAGS += $(CFLAGS_ASAN)
-asan: LDFLAGS += -fsanitize=address,undefined
-asan: $(TARGET)
-
-ubsan: CFLAGS += $(CFLAGS_UBSAN)
-ubsan: LDFLAGS += -fsanitize=undefined
-ubsan: $(TARGET)
+```text
+Claim:
+Confidence:
+Sanitizer I expect to be most useful:
+Report field I expect to matter:
+Evidence that would weaken this:
 ```
 
-Why `-fno-sanitize-recover=undefined` — by default UBSan prints a warning and continues. You almost always want it to abort so tests fail, not silently pass.
+## Evidence Round 1
 
-### 2. Rerun last week's bug buffet under ASan
+Build and run the AddressSanitizer target:
 
-Take each of the bugs you wrote last week and run them under ASan instead of Valgrind. Compare:
-
-- Speed — ASan is often 10× faster.
-- Output — the shadow-memory diagrams show exactly which byte was poisoned and why.
-- Stack coverage — ASan catches stack overflows Valgrind missed.
-
-You'll start to develop intuition for which tool to reach for first.
-
-### 3. Exercise UBSan
-
-Write a program that does each of:
-
-- Signed integer overflow (`INT_MAX + 1`)
-- Left-shifting a negative number
-- Dereferencing a misaligned pointer
-- `(int *)0x1 -> deref` (null-ish pointer, misaligned, etc.)
-- Reading past the end of an `enum`'s range
-
-Build with UBSan and run. Note that UBSan is happy with most of these at compile time but *catches them at runtime* with a precise line number. This is information a compiler alone cannot give you.
-
-### 4. LeakSanitizer
-
-With ASan enabled, LSan runs at process exit. Introduce a deliberate leak and confirm the exit-time report. Practice the `LSAN_OPTIONS` environment variable for suppressions:
-
-```
-LSAN_OPTIONS=suppressions=./leaks.supp ./myprog
+```bash
+cd Week-06-Sanitizers/example
+make clean
+make asan
+./asan_demo
 ```
 
-### 5. Options &amp; environment variables worth knowing
+Record:
 
-- `ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:symbolize=1`
-- `UBSAN_OPTIONS=print_stacktrace=1`
-- `ASAN_OPTIONS=halt_on_error=0` — continue after error (useful in tests to see all failures at once)
+- sanitizer name
+- failure category
+- access size
+- source line
+- allocation or shadow-memory clue
+- whether execution stopped immediately
 
-Read the sanitizer docs for the full list — there are dozens of knobs, and a handful save real time.
+## Mentor Interruption
 
-### 6. Wire sanitizers into CI mentally
+- What operation failed?
+- What source line did the report identify?
+- What earlier design choice made that operation possible?
+- Is this a bounds, lifetime, initialization, or API-contract problem?
+- What would a test or assertion need to catch this sooner?
 
-Think about this even if you don't have a CI pipeline right now:
+## Evidence Round 2
 
-- ASan build runs on every PR.
-- UBSan runs on the nightly job (more time, more flags).
-- Valgrind runs weekly, because it's slow but finds things the others miss.
+Build and run the UndefinedBehaviorSanitizer target:
 
-Sketch this in a paragraph or two in your notes. You don't have to implement it — the goal is to internalize the layered defense.
+```bash
+make ubsan
+./ubsan_demo
+```
 
-## Stretch
+Compare the two reports:
 
-- Try MSan (Clang only): `-fsanitize=memory`. Expect pain — you'll need libc++ or a clean build of all dependencies. Worth doing once so you understand the tradeoffs.
-- Explore `libfuzzer` — structure-aware fuzzing integrated with sanitizers. Even a simple fuzz harness over a parser is a spectacular bug-finding tool.
-- Read about `-fsanitize=cfi` (control-flow integrity) and `-fstack-protector-strong` — related compiler hardening features.
+- Which one points closer to the bad operation?
+- Which one requires more interpretation?
+- What would you rerun with different sanitizer flags?
+- What result would make you inspect compiler optimization or integer assumptions?
 
-## Checkpoint
+## Debrief
 
-You can move to Week 7 when you can:
+Sanitizers are excellent at turning undefined behavior into concrete evidence. They are not a substitute for reasoning about invariants. Use the report to locate the violated boundary, then ask why the code allowed that boundary to be crossed.
 
-- Explain the differences between ASan, UBSan, LSan, and MSan, and when to reach for each.
-- Rebuild a project under ASan+UBSan and run your test suite.
-- Read an ASan report — including the shadow-memory lines — and point to the bug.
-- Explain the tradeoffs between ASan and Valgrind and when you'd use each.
+## Apprentice Notes
+
+Write one note:
+
+```text
+Symptom:
+First claim:
+Sanitizer command:
+Report evidence:
+Model update:
+Next move:
+Prevention:
+```
+
+## Mentor Rubric
+
+Strong answers:
+
+- name the sanitizer and failure category
+- quote the meaningful source line or access detail
+- distinguish failing operation from root cause
+- compare ASan and UBSan evidence
+- propose a prevention step such as bounds validation, invariant checks, or sanitizer CI
+
+Weak answers:
+
+- stop at "ASan crashed"
+- copy the report without interpreting it
+- treat sanitizer output as a complete postmortem
+- ignore why the invalid operation was reachable
