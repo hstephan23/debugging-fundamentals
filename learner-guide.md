@@ -36,18 +36,22 @@ The next smallest experiment is <next action>.
 
 ## What Counts As Evidence
 
-Good evidence is something the program, tool, or operating system showed directly:
+Good evidence is something the system showed directly. It can come from a program, tool, test, runtime, operating system, service, database, browser, log pipeline, or user-visible artifact:
 
 - a stack frame
 - an argument value
 - a local variable
-- a watchpoint stop
-- a Valgrind allocation site
-- a sanitizer report line
+- a failing assertion or test case
+- a trace span or request ID
+- a database row or query plan
+- a network status code or payload
+- a heap snapshot or allocation site
+- a runtime check report line
 - a thread state
 - a log entry
 - a syscall trace
 - a repeated output difference
+- a deployment, configuration, or environment difference
 
 Your interpretation comes after the evidence. Keep those separate.
 
@@ -87,3 +91,5 @@ Then pick one unknown and ask what single command, input change, build change, o
 - Stop after three failed hypotheses and rebuild the model.
 - Treat environment, build flags, timing, input, and tool versions as possible inputs.
 - Ask what would prevent the bug, not only what caused it.
+- Write down the observation that would make your current theory weaker.
+- Make the next experiment smaller than the current uncertainty.

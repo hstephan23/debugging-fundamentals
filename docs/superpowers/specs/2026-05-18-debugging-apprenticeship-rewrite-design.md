@@ -52,34 +52,34 @@ Debugging/
 ├── learner-guide.md
 ├── investigation-template.md
 ├── discussion-rubric.md
-├── Week-01-Foundations/
+├── Week-01-Symptoms-Inputs-Claims/
 │   ├── README.md
 │   └── example/
-├── Week-02-GDB-Fundamentals/
+├── Week-02-Runtime-State/
 │   ├── README.md
 │   └── example/
-├── Week-03-Advanced-GDB/
+├── Week-03-Causality/
 │   ├── README.md
 │   └── example/
-├── Week-04-Core-Dumps/
+├── Week-04-Postmortem-Evidence/
 │   ├── README.md
 │   └── example/
-├── Week-05-Valgrind/
+├── Week-05-Ownership-Lifetime/
 │   ├── README.md
 │   └── example/
-├── Week-06-Sanitizers/
+├── Week-06-Runtime-Checks/
 │   ├── README.md
 │   └── example/
-├── Week-07-Concurrency-1/
+├── Week-07-Nondeterminism-1/
 │   ├── README.md
 │   └── example/
-├── Week-08-Concurrency-2/
+├── Week-08-Nondeterminism-2/
 │   ├── README.md
 │   └── example/
-├── Week-09-Logging/
+├── Week-09-Signals-Observability/
 │   ├── README.md
 │   └── example/
-└── Week-10-Capstone/
+└── Week-10-Full-Investigation/
     ├── README.md
     ├── playbooks.md
     └── example/

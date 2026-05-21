@@ -29,7 +29,7 @@ The learner:
 
 Example:
 
-> The Valgrind report points to an invalid write in `append_item`. I think the array length is wrong, so I will inspect the allocation size and loop bound.
+> The trace shows the request crossed the API boundary with a tenant ID, but the database query ran without that filter. I think the repository method dropped context, so I will inspect the query builder inputs.
 
 ## 2 - Shallow
 
@@ -42,9 +42,9 @@ The learner:
 
 Example:
 
-> GDB says it crashed in `parse`.
+> The debugger says it crashed in `parse`.
 
-The missing part is what value, frame, or source line made `parse` suspicious.
+The missing part is what value, frame, input, state transition, or source line made `parse` suspicious.
 
 ## 1 - Guessing
 
@@ -58,9 +58,9 @@ The learner:
 
 Example:
 
-> It is probably a compiler bug because debug mode works.
+> It is probably a framework bug because local mode works.
 
-The claim might be possible, but the learner has not tested build flags, undefined behavior, input, or environment.
+The claim might be possible, but the learner has not tested configuration, input, dependency versions, data shape, timing, or environment.
 
 ## Mentor Response By Score
 
