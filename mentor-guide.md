@@ -1,6 +1,6 @@
 # Mentor Guide
 
-This curriculum is a debugging apprenticeship. Your job is not to explain every tool up front. Your job is to keep the learner moving from symptom to hypothesis to experiment to evidence.
+This curriculum is a debugging apprenticeship. Your job is not to explain every tool up front. Your job is to keep the learner moving from symptom to hypothesis to experiment to evidence to prevention.
 
 ## Session Rhythm
 
@@ -26,7 +26,7 @@ Interrupt when the learner:
 - changes several variables at once
 - keeps reading source after a runtime observation would be cheaper
 - trusts one passing run of concurrent code
-- treats a sanitizer, Valgrind, or GDB report as the root cause instead of evidence
+- treats a debugger, log, trace, test, profile, runtime report, or static warning as the root cause instead of evidence
 - skips the prevention question after finding the failure
 
 Use short questions:
@@ -48,11 +48,11 @@ A strong learner answer names:
 
 Weak answer:
 
-> GDB showed it was in `fib`.
+> The debugger showed it was in `parse`.
 
 Strong answer:
 
-> I expected recursion depth to be the problem. Stopping in `fib` showed `n` was already wrong at the function boundary, so recursion is probably not the first cause. The next experiment is to inspect the caller.
+> I expected the parser to corrupt the value. Stopping at the parser boundary showed the value was already invalid before parsing began, so the parser is probably not the first cause. The next experiment is to inspect the caller that assembled the input.
 
 ## Handling Wrong Hypotheses
 

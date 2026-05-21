@@ -17,16 +17,16 @@
 - Create `investigation-template.md`: reusable weekly structure for future modules.
 - Create `discussion-rubric.md`: concrete rubric for evaluating claims, evidence, tool choice, model updates, and prevention.
 - Modify `README.md`: repo identity, how to use the apprenticeship, week map, shared guide links, and example-code policy.
-- Modify `Week-01-Foundations/README.md`: scenario about debug vs release behavior and hypothesis discipline.
-- Modify `Week-02-GDB-Fundamentals/README.md`: scenario about choosing breakpoints and reading stack/local state.
-- Modify `Week-03-Advanced-GDB/README.md`: scenario about tracing who changed suspicious state.
-- Modify `Week-04-Core-Dumps/README.md`: scenario about preserving postmortem evidence after a crash.
-- Modify `Week-05-Valgrind/README.md`: scenario about reconstructing memory ownership from Memcheck reports.
-- Modify `Week-06-Sanitizers/README.md`: scenario about interpreting sanitizer failures as precise evidence.
-- Modify `Week-07-Concurrency-1/README.md`: scenario about nondeterministic counters and TSan evidence.
-- Modify `Week-08-Concurrency-2/README.md`: scenario about deadlock and live-thread inspection.
-- Modify `Week-09-Logging/README.md`: scenario about debugging from logs, traces, and profiles.
-- Modify `Week-10-Capstone/README.md`: final mentor-led investigation and postmortem defense.
+- Modify `Week-01-Symptoms-Inputs-Claims/README.md`: scenario about debug vs release behavior and hypothesis discipline.
+- Modify `Week-02-Runtime-State/README.md`: scenario about choosing breakpoints and reading stack/local state.
+- Modify `Week-03-Causality/README.md`: scenario about tracing who changed suspicious state.
+- Modify `Week-04-Postmortem-Evidence/README.md`: scenario about preserving postmortem evidence after a crash.
+- Modify `Week-05-Ownership-Lifetime/README.md`: scenario about reconstructing memory ownership from Memcheck reports.
+- Modify `Week-06-Runtime-Checks/README.md`: scenario about interpreting sanitizer failures as precise evidence.
+- Modify `Week-07-Nondeterminism-1/README.md`: scenario about nondeterministic counters and TSan evidence.
+- Modify `Week-08-Nondeterminism-2/README.md`: scenario about deadlock and live-thread inspection.
+- Modify `Week-09-Signals-Observability/README.md`: scenario about debugging from logs, traces, and profiles.
+- Modify `Week-10-Full-Investigation/README.md`: final mentor-led investigation and postmortem defense.
 - Inspect tracked binaries under `Week-*/example/`: remove from Git only if they are tracked compiled artifacts; preserve source files and build files.
 
 ## Task 1: Shared Apprenticeship Guides
@@ -109,9 +109,9 @@
 ## Task 3: Weeks 1-3 Dialogue Rewrites
 
 **Files:**
-- Modify: `Week-01-Foundations/README.md`
-- Modify: `Week-02-GDB-Fundamentals/README.md`
-- Modify: `Week-03-Advanced-GDB/README.md`
+- Modify: `Week-01-Symptoms-Inputs-Claims/README.md`
+- Modify: `Week-02-Runtime-State/README.md`
+- Modify: `Week-03-Causality/README.md`
 
 - [ ] **Step 1: Rewrite Week 1**
 
@@ -120,7 +120,7 @@
   - Investigation: debug vs release behavior differs.
   - Mentor Opening: symptom, hidden inputs, first hypothesis.
   - First Claim: state what compiler/build factor might matter.
-  - Evidence Round 1: `cd Week-01-Foundations/example && make debug && make release && make run-debug && make run-release`
+  - Evidence Round 1: `cd Week-01-Symptoms-Inputs-Claims/example && make debug && make release && make run-debug && make run-release`
   - Mentor Interruption: what changed and what stayed constant.
   - Evidence Round 2: inspect `Makefile` flags and identify which flags support debugging.
   - Debrief: debugging is controlled learning.
@@ -132,7 +132,7 @@
   Use the canonical weekly sections:
 
   - Investigation: recursive Fibonacci behavior must be understood at runtime.
-  - Evidence Round 1: `cd Week-02-GDB-Fundamentals/example && make && gdb ./fib`
+  - Evidence Round 1: `cd Week-02-Runtime-State/example && make && gdb ./fib`
   - Include commands: `break fib`, `run 10`, `bt`, `info args`, `info locals`, `finish`, `break fib if n == 3`.
   - Debrief: a breakpoint is a question about state.
 
@@ -141,7 +141,7 @@
   Use the canonical weekly sections:
 
   - Investigation: suspicious state changes before the visible failure.
-  - Evidence Round 1: `cd Week-03-Advanced-GDB/example && make && gdb ./watchpoint_demo`
+  - Evidence Round 1: `cd Week-03-Causality/example && make && gdb ./watchpoint_demo`
   - Include commands: `break main`, `run`, `watch secret`, `continue`.
   - Evidence Round 2: optional `make rr` and `make replay` if `rr` is installed.
   - Debrief: causality beats source-order reading.
@@ -151,8 +151,8 @@
   Run:
 
   ```bash
-  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-01-Foundations/README.md Week-02-GDB-Fundamentals/README.md Week-03-Advanced-GDB/README.md
-  git diff --check -- Week-01-Foundations/README.md Week-02-GDB-Fundamentals/README.md Week-03-Advanced-GDB/README.md
+  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-01-Symptoms-Inputs-Claims/README.md Week-02-Runtime-State/README.md Week-03-Causality/README.md
+  git diff --check -- Week-01-Symptoms-Inputs-Claims/README.md Week-02-Runtime-State/README.md Week-03-Causality/README.md
   ```
 
   Expected: each file has all required sections and no whitespace errors.
@@ -162,23 +162,23 @@
   Run:
 
   ```bash
-  git add Week-01-Foundations/README.md Week-02-GDB-Fundamentals/README.md Week-03-Advanced-GDB/README.md
+  git add Week-01-Symptoms-Inputs-Claims/README.md Week-02-Runtime-State/README.md Week-03-Causality/README.md
   git commit -m "Rewrite early debugging modules as mentor dialogues"
   ```
 
 ## Task 4: Weeks 4-6 Dialogue Rewrites
 
 **Files:**
-- Modify: `Week-04-Core-Dumps/README.md`
-- Modify: `Week-05-Valgrind/README.md`
-- Modify: `Week-06-Sanitizers/README.md`
+- Modify: `Week-04-Postmortem-Evidence/README.md`
+- Modify: `Week-05-Ownership-Lifetime/README.md`
+- Modify: `Week-06-Runtime-Checks/README.md`
 
 - [ ] **Step 1: Rewrite Week 4**
 
   Use the canonical weekly sections:
 
   - Investigation: a crash happened outside an interactive debugger.
-  - Evidence Round 1: `cd Week-04-Core-Dumps/example && make && ./crash`
+  - Evidence Round 1: `cd Week-04-Postmortem-Evidence/example && make && ./crash`
   - Evidence Round 2: enable core dumps where supported, then inspect with GDB.
   - Debrief: preserve postmortem evidence before changing state.
 
@@ -187,7 +187,7 @@
   Use the canonical weekly sections:
 
   - Investigation: memory corruption must be classified from a report.
-  - Evidence Round 1: `cd Week-05-Valgrind/example && make && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./01_heap_overflow`
+  - Evidence Round 1: `cd Week-05-Ownership-Lifetime/example && make && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./01_heap_overflow`
   - Evidence Round 2: run the same command shape against `./04_uninitialized` or `./07_leak`.
   - Debrief: ownership and lifetime must tell one consistent story.
 
@@ -196,7 +196,7 @@
   Use the canonical weekly sections:
 
   - Investigation: sanitizer output points to a precise undefined behavior boundary.
-  - Evidence Round 1: `cd Week-06-Sanitizers/example && make asan && ./asan_demo`
+  - Evidence Round 1: `cd Week-06-Runtime-Checks/example && make asan && ./asan_demo`
   - Evidence Round 2: `make ubsan && ./ubsan_demo`
   - Debrief: sanitizer reports are not root causes by themselves; they are high-quality evidence.
 
@@ -205,8 +205,8 @@
   Run:
 
   ```bash
-  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-04-Core-Dumps/README.md Week-05-Valgrind/README.md Week-06-Sanitizers/README.md
-  git diff --check -- Week-04-Core-Dumps/README.md Week-05-Valgrind/README.md Week-06-Sanitizers/README.md
+  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-04-Postmortem-Evidence/README.md Week-05-Ownership-Lifetime/README.md Week-06-Runtime-Checks/README.md
+  git diff --check -- Week-04-Postmortem-Evidence/README.md Week-05-Ownership-Lifetime/README.md Week-06-Runtime-Checks/README.md
   ```
 
   Expected: each file has all required sections and no whitespace errors.
@@ -216,24 +216,24 @@
   Run:
 
   ```bash
-  git add Week-04-Core-Dumps/README.md Week-05-Valgrind/README.md Week-06-Sanitizers/README.md
+  git add Week-04-Postmortem-Evidence/README.md Week-05-Ownership-Lifetime/README.md Week-06-Runtime-Checks/README.md
   git commit -m "Rewrite memory and postmortem modules as mentor dialogues"
   ```
 
 ## Task 5: Weeks 7-10 Dialogue Rewrites
 
 **Files:**
-- Modify: `Week-07-Concurrency-1/README.md`
-- Modify: `Week-08-Concurrency-2/README.md`
-- Modify: `Week-09-Logging/README.md`
-- Modify: `Week-10-Capstone/README.md`
+- Modify: `Week-07-Nondeterminism-1/README.md`
+- Modify: `Week-08-Nondeterminism-2/README.md`
+- Modify: `Week-09-Signals-Observability/README.md`
+- Modify: `Week-10-Full-Investigation/README.md`
 
 - [ ] **Step 1: Rewrite Week 7**
 
   Use the canonical weekly sections:
 
   - Investigation: counter output changes between runs.
-  - Evidence Round 1: `cd Week-07-Concurrency-1/example && make && ./race_counter && ./race_counter`
+  - Evidence Round 1: `cd Week-07-Nondeterminism-1/example && make && ./race_counter && ./race_counter`
   - Evidence Round 2: `make tsan && ./tsan_race`, then compare `./race_counter_mutex` and `./race_counter_atomic`.
   - Debrief: one passing concurrent run proves very little.
 
@@ -242,7 +242,7 @@
   Use the canonical weekly sections:
 
   - Investigation: a program appears hung.
-  - Evidence Round 1: `cd Week-08-Concurrency-2/example && make && ./deadlock`
+  - Evidence Round 1: `cd Week-08-Nondeterminism-2/example && make && ./deadlock`
   - Evidence Round 2: attach with GDB or inspect threads where supported; compare `./deadlock_fixed`.
   - Debrief: live debugging should inspect before disturbing the system.
 
@@ -251,7 +251,7 @@
   Use the canonical weekly sections:
 
   - Investigation: the program must keep running while the learner gathers evidence.
-  - Evidence Round 1: `cd Week-09-Logging/example && make && LOG_LEVEL=debug ./server`
+  - Evidence Round 1: `cd Week-09-Signals-Observability/example && make && LOG_LEVEL=debug ./server`
   - Evidence Round 2: use `strace` if available, otherwise compare log levels; run `./cpu_hog` and optionally `perf`.
   - Debrief: observability answers questions without stopping the program.
 
@@ -269,8 +269,8 @@
   Run:
 
   ```bash
-  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-07-Concurrency-1/README.md Week-08-Concurrency-2/README.md Week-09-Logging/README.md Week-10-Capstone/README.md
-  git diff --check -- Week-07-Concurrency-1/README.md Week-08-Concurrency-2/README.md Week-09-Logging/README.md Week-10-Capstone/README.md
+  rg -n "^## (Investigation|Mentor Opening|First Claim|Evidence Round 1|Mentor Interruption|Evidence Round 2|Debrief|Apprentice Notes|Mentor Rubric)" Week-07-Nondeterminism-1/README.md Week-08-Nondeterminism-2/README.md Week-09-Signals-Observability/README.md Week-10-Full-Investigation/README.md
+  git diff --check -- Week-07-Nondeterminism-1/README.md Week-08-Nondeterminism-2/README.md Week-09-Signals-Observability/README.md Week-10-Full-Investigation/README.md
   ```
 
   Expected: each file has all required sections and no whitespace errors.
@@ -280,7 +280,7 @@
   Run:
 
   ```bash
-  git add Week-07-Concurrency-1/README.md Week-08-Concurrency-2/README.md Week-09-Logging/README.md Week-10-Capstone/README.md
+  git add Week-07-Nondeterminism-1/README.md Week-08-Nondeterminism-2/README.md Week-09-Signals-Observability/README.md Week-10-Full-Investigation/README.md
   git commit -m "Rewrite advanced debugging modules as mentor dialogues"
   ```
 
@@ -339,14 +339,14 @@
   Run:
 
   ```bash
-  make -C Week-01-Foundations/example clean
-  make -C Week-01-Foundations/example debug
-  make -C Week-02-GDB-Fundamentals/example clean
-  make -C Week-02-GDB-Fundamentals/example
-  make -C Week-05-Valgrind/example clean
-  make -C Week-05-Valgrind/example
-  make -C Week-07-Concurrency-1/example clean
-  make -C Week-07-Concurrency-1/example
+  make -C Week-01-Symptoms-Inputs-Claims/example clean
+  make -C Week-01-Symptoms-Inputs-Claims/example debug
+  make -C Week-02-Runtime-State/example clean
+  make -C Week-02-Runtime-State/example
+  make -C Week-05-Ownership-Lifetime/example clean
+  make -C Week-05-Ownership-Lifetime/example
+  make -C Week-07-Nondeterminism-1/example clean
+  make -C Week-07-Nondeterminism-1/example
   ```
 
   Expected: representative examples still build. If a command fails because a tool is unavailable, record the exact failure and continue with the remaining checks.

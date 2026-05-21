@@ -7,7 +7,7 @@ Use this template when adding or rewriting a module.
 
 ## Investigation
 
-Describe the symptom, the example program, and the constraint. Keep this short. The learner should want to inspect evidence, not read a lecture.
+Describe the symptom, the system under investigation, and the constraint. Keep this short. The learner should want to inspect evidence, not read a lecture.
 
 ## Mentor Opening
 
@@ -27,11 +27,10 @@ Before running a tool, write:
 
 ## Evidence Round 1
 
-Run the first experiment.
+Run the first experiment. Use the local command that produces the strongest evidence for this system.
 
 ```bash
-cd path/to/example
-make
+# command goes here
 ```
 
 Record the exact command and the strongest observation.
