@@ -14,11 +14,11 @@ Describe the symptom, the system under investigation, and the constraint. Keep t
 - What failed, and how do you know?
 - What is your first hypothesis?
 - What would make that hypothesis weaker?
-- What is the smallest experiment that could produce useful evidence?
+- What is the smallest question that could identify useful evidence?
 
 ## First Claim
 
-Before running a tool, write:
+Before choosing evidence, write:
 
 - claim:
 - confidence:
@@ -27,28 +27,20 @@ Before running a tool, write:
 
 ## Evidence Round 1
 
-Run the first experiment. Use the local command that produces the strongest evidence for this system.
+Choose the first question or evidence source that would reduce uncertainty.
 
-```bash
-# command goes here
-```
-
-Record the exact command and the strongest observation.
+Record the strongest expected or observed signal.
 
 ## Mentor Interruption
 
-- What did the tool show directly?
+- What did the evidence show directly?
 - What are you inferring from that output?
 - Which assumption changed?
 - What are you still unable to prove?
 
 ## Evidence Round 2
 
-Run a narrower experiment based on the model update.
-
-```bash
-# command goes here
-```
+Choose a narrower follow-up question based on the model update.
 
 Record whether the result supports, weakens, or redirects the current hypothesis.
 
@@ -68,7 +60,7 @@ Write a short investigation note:
 ```text
 Symptom:
 First claim:
-Experiment:
+Question or evidence source:
 Evidence:
 Model update:
 Next move:
@@ -81,13 +73,13 @@ Strong answers:
 
 - name the exact evidence
 - separate observation from interpretation
-- update the model after each experiment
-- choose the next experiment from the evidence
+- update the model after each evidence round
+- choose the next question from the evidence
 - include a prevention step
 
 Weak answers:
 
-- name only the tool
+- name only the diagnostic source
 - explain before observing
 - change multiple variables at once
 - stop after finding a line without explaining why it failed

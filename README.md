@@ -2,7 +2,7 @@
 
 A mentor-led curriculum for learning how to approach software failures through investigation, critical thinking, evidence, and postmortems.
 
-This is not a tour of C, GDB, or any single toolchain. Each week starts with a failure and asks the learner to make a claim, test it, interpret the evidence, and revise the model. The included examples use small systems programs because they make failure visible, but the real subject is the debugging loop you can use in any stack.
+This is not a tour of C, GDB, or any single toolchain. Each week starts with a failure shape and asks the learner to make a claim, identify evidence, interpret what that evidence would prove, and revise the model.
 
 ## Who This Is For
 
@@ -10,10 +10,10 @@ Use this repo if:
 
 - you want to learn debugging as a repeatable thinking discipline
 - you have a mentor, study partner, or review group that can challenge your reasoning
-- you are willing to write short investigation notes instead of only running commands
-- you can tolerate examples in one implementation language while practicing ideas that transfer to many
+- you are willing to answer precise prompts instead of jumping to fixes
+- you want discussion material that transfers across languages, systems, and tools
 
-Solo learners can still use the repo. Read the mentor prompts out loud, answer them in your bug journal, and do not continue until you can name the evidence that changed your mind.
+Solo learners can still use the repo. Read the mentor prompts out loud, answer them in your bug journal, and do not continue until you can name the evidence that would change your mind.
 
 ## What You Are Practicing
 
@@ -22,7 +22,7 @@ The curriculum is built around habits that transfer across languages, frameworks
 - turn vague symptoms into specific, observable questions
 - separate what happened from why you think it happened
 - make hypotheses that can be weakened, not just confirmed
-- choose the smallest experiment that can reduce uncertainty
+- choose the smallest question that can reduce uncertainty
 - preserve evidence before changing the system
 - compare alternative explanations instead of chasing the first plausible story
 - end with a prevention move: test, assertion, invariant, log, type, monitor, review rule, or design change
@@ -34,10 +34,10 @@ Every module follows the same loop:
 1. Restate the symptom.
 2. Make a first claim.
 3. Name what would weaken that claim.
-4. Run the smallest useful experiment.
+4. Choose the smallest useful question or evidence source.
 5. Separate direct evidence from interpretation.
 6. Update the model.
-7. Run a narrower experiment.
+7. Ask a narrower follow-up question.
 8. End with a prevention or postmortem note.
 
 The learner should leave each session with a short note:
@@ -45,7 +45,7 @@ The learner should leave each session with a short note:
 ```text
 Symptom:
 First claim:
-Experiment:
+Question or evidence source:
 Evidence:
 Model update:
 Next move:
@@ -63,13 +63,14 @@ Prevention:
 
 Do not say a tool found the bug. Say what evidence changed your model.
 
-Weak:
+Use this shape instead:
 
-> The debugger showed the bug.
-
-Strong:
-
-> The request had a valid ID at the API boundary, but the stored row had a null owner before authorization ran, so the next experiment is to inspect the persistence path that creates or updates that row.
+```text
+I believed:
+The evidence showed:
+That changed:
+The next question is:
+```
 
 ## The 10 Investigations
 
@@ -78,30 +79,28 @@ Strong:
 | 1 | [Foundations](Week-01-Symptoms-Inputs-Claims/README.md) | Turn symptoms into testable hypotheses. |
 | 2 | [Runtime State](Week-02-Runtime-State/README.md) | Stop at useful boundaries and inspect live state. |
 | 3 | [Causality](Week-03-Causality/README.md) | Trace where state first changed, not only where it was noticed. |
-| 4 | [Postmortem Evidence](Week-04-Postmortem-Evidence/README.md) | Preserve and interpret evidence after a failure. |
-| 5 | [Ownership and Lifetime](Week-05-Ownership-Lifetime/README.md) | Reconstruct responsibility from reports and traces. |
-| 6 | [Runtime Checks](Week-06-Runtime-Checks/README.md) | Use precise failures to narrow violated boundaries. |
-| 7 | [Nondeterminism I](Week-07-Nondeterminism-1/README.md) | Separate unreliable outcomes from stronger evidence. |
-| 8 | [Nondeterminism II](Week-08-Nondeterminism-2/README.md) | Inspect blocked systems without making them worse. |
-| 9 | [Signals and Observability](Week-09-Signals-Observability/README.md) | Debug through external signals instead of stopping the system. |
-| 10 | [Full Investigation](Week-10-Full-Investigation/README.md) | Run a full investigation and defend the postmortem. |
+| 4 | [Preserve Failure Evidence](Week-04-Preserve-Failure-Evidence/README.md) | Preserve evidence before changing the system. |
+| 5 | [Reconstruct Responsibility](Week-05-Reconstruct-Responsibility/README.md) | Identify who owned, changed, or inherited broken state. |
+| 6 | [Reason From Guardrails](Week-06-Reason-From-Guardrails/README.md) | Use checks and violated boundaries as evidence. |
+| 7 | [Unreliable Outcomes](Week-07-Unreliable-Outcomes/README.md) | Separate variable outcomes from defensible causes. |
+| 8 | [Stuck Systems](Week-08-Stuck-Systems/README.md) | Inspect blocked systems without destroying live evidence. |
+| 9 | [Choose Useful Signals](Week-09-Choose-Useful-Signals/README.md) | Select the least disruptive evidence source for the question. |
+| 10 | [Defend The Investigation](Week-10-Defend-The-Investigation/README.md) | Turn an investigation into a defensible conclusion. |
 
-## Example Code Policy
+## Discussion Policy
 
-Each `example/` directory is investigation material. Build it, run it, break on it, inspect it, and compare tool output against source.
+Weeks 04-10 are discussion-first. They should contain questions, prompts, reasoning structures, and note templates, not runnable examples or tool walkthroughs.
 
-The examples are intentionally small and mostly written in C. That is a fixture choice, not the learning objective. The learner should spend attention on symptom framing, uncertainty reduction, evidence quality, and prevention rather than on memorizing language trivia.
-
-Compiled binaries are not curriculum source. They should be regenerated with the local build command when needed.
+Use real incidents, remembered bugs, production reports, test failures, support tickets, local project failures, or hypothetical failure shapes as the discussion material. Keep any pseudocode minimal and use it only to clarify a state transition or decision point.
 
 ## Mentor Expectations
 
 The mentor should:
 
-- ask for the learner's hypothesis before the command
+- ask for the learner's hypothesis before choosing evidence
 - interrupt vague answers
 - ask what would disprove the claim
-- force one-variable experiments
+- force one-variable reasoning
 - ask what the evidence showed directly
 - end with prevention
 
@@ -109,7 +108,7 @@ The mentor should not:
 
 - lecture through all concepts before the first observation
 - accept "the tool found it" as an explanation
-- let the learner keep changing code without naming evidence
+- let the learner keep changing the system without naming evidence
 - treat one passing concurrent run as proof
 
 ## Learner Expectations
@@ -120,30 +119,15 @@ The learner should:
 - give confidence levels
 - separate evidence from inference
 - revise the model when evidence changes
-- explain why the next experiment is smaller or sharper
+- explain why the next question is smaller or sharper
 - name how this bug could be easier to catch next time
 
-## Tools Used
+## Evidence Sources
 
-Most examples assume a Linux environment or a Linux VM/container. Some tools have limited support on macOS.
-
-Core tools:
-
-- `gcc` or `clang`
-- `make`
-- `gdb`
-- `valgrind`
-- sanitizer-capable compiler
-- pthreads
-- `strace`
-- `perf`
-- `rr` where available
-
-If a tool is unavailable, do not skip the discussion. Record what evidence that tool would have produced and choose the next best experiment.
-
-For another stack, substitute equivalent evidence sources:
+Use whatever evidence source fits the system under discussion:
 
 - browser devtools, server logs, traces, metrics, database query logs
 - failing tests, property checks, type errors, lint output
 - request IDs, queue events, job histories, deployment diffs
 - debugger breakpoints, profiles, heap snapshots, crash reports
+- support tickets, screenshots, audit logs, feature flags, configuration history
