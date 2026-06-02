@@ -1,6 +1,6 @@
 # Learner Guide
 
-This repo teaches debugging through apprenticeship. You will be asked to make claims, run experiments, interpret evidence, and revise your model out loud.
+This repo teaches debugging through apprenticeship. You will be asked to make claims, choose evidence, interpret that evidence, and revise your model out loud.
 
 The point is not to sound certain. The point is to become precise.
 
@@ -9,11 +9,10 @@ The point is not to sound certain. The point is to become precise.
 Before a session:
 
 - open the week's `README.md`
-- build the example if the week asks you to
 - create or open your bug journal
 - expect to answer in short notes, not essays
 
-Bring a terminal and a willingness to be wrong in public. A wrong hypothesis tested cleanly is progress.
+Bring a willingness to be wrong in public. A wrong hypothesis weakened cleanly is progress.
 
 ## How To Answer
 
@@ -23,20 +22,20 @@ Use this shape:
 I think <claim> because <reason>.
 I am <low/medium/high> confidence.
 This would be weaker if <specific observation>.
-I will run <command/action> to check <question>.
+The next question is <question>.
 ```
 
-After the experiment:
+After the evidence discussion:
 
 ```text
 I observed <exact evidence>.
 That changes <hypothesis> because <reason>.
-The next smallest experiment is <next action>.
+The next smallest question is <next question>.
 ```
 
 ## What Counts As Evidence
 
-Good evidence is something the system showed directly. It can come from a program, tool, test, runtime, operating system, service, database, browser, log pipeline, or user-visible artifact:
+Good evidence is something the system showed directly. It can come from a program, diagnostic report, test, runtime, operating system, service, database, browser, log pipeline, or user-visible artifact:
 
 - a stack frame
 - an argument value
@@ -82,14 +81,14 @@ Assumed:
 Unknown:
 ```
 
-Then pick one unknown and ask what single command, input change, build change, or log line could answer it.
+Then pick one unknown and ask what single observation, input change, boundary check, log line, artifact, or question could answer it.
 
 ## Strong Habits
 
 - Change one variable at a time.
 - Prefer evidence over explanation.
 - Stop after three failed hypotheses and rebuild the model.
-- Treat environment, build flags, timing, input, and tool versions as possible inputs.
+- Treat environment, configuration, timing, input, and diagnostic versions as possible inputs.
 - Ask what would prevent the bug, not only what caused it.
 - Write down the observation that would make your current theory weaker.
-- Make the next experiment smaller than the current uncertainty.
+- Make the next question smaller than the current uncertainty.
