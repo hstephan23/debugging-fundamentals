@@ -34,23 +34,57 @@ The learner should not solve the bug yet. The learner's job is to decide what ev
 ## Opening Prompts
 
 - What failed, and how do you know it failed?
+
+  I think what failed is the retry mechanism. The reason I believe that is what failed is that it was released right before the failure. They probably didn't test the feature in low latency to see if it would double send. 
+
 - What evidence exists right now that might disappear if you restart, retry, clean up, deploy, or edit?
+
+  It depends on the system, I'm not entirely certain. I think in this case nothing? Besides the stale checkout pieces... It doesn't really mention in the prompt
+
 - What part of the current state is evidence, and what part is interpretation?
+
+  I think the current evidence is the code push and low bandwidth, the rest is mostly interpretation of the event. 
 
 ## Scenario Discussion Prompts
 
 - Which facts are direct evidence, secondhand reports, or timing coincidences?
+
+  I think some of these are difficult to answer without knowing the exact tech stack and build of each user. I'm also not good at determining this... I get caught up too much in the fine details.  
+
 - Which evidence is most likely to disappear first?
+
+  The stale checkout sessions (if they exist).
+
 - What could be changed or hidden by retrying checkout, voiding charges, clearing sessions, or waiting until tomorrow?
+
+  A lot of data could be erased per the instructions. Maybe the dual charges will be automatically sorted out by the bank. Waiting too long can make reproducing the issue more difficult. 
+
 - What would you preserve from support, finance, engineering, and the payment provider before changing anything?
+
+  I would get an exact replicate of the Production code base, copy of DB, and then all the notes mentioned above. 
+
 - What should be included in the first incident note without claiming root cause?
+
+  I think the first inclusion is that this will be resolved and customers can be assured their charges will be correct. I think stating only facts of what you have determined so far is important too. 
+
 
 ## First Claim Prompts
 
 - What is your first explanation for the failure?
+
+  I think what failed is the retry mechanism. The reason I believe that is what failed is that it was released right before the failure. They probably didn't test the feature in low latency to see if it would double send. 
+
 - How confident are you?
+
+  Not very. 
+
 - What preserved artifact would support that explanation?
+
+  The recent code push. 
+
 - What preserved artifact would weaken it?
+
+  The fact that the latency happened longer than the reported failures did. 
 
 ## Candidate First Claims
 
